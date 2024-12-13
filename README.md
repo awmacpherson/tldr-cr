@@ -4,5 +4,5 @@ The Makefile recipes use a build container to normalize the LaTeX environment. Y
 
 Then it's:
 
-1. `make container`
+1. `make env`
 2. `make`
