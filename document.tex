@@ -1,0 +1,497 @@
+\maketitle
+%\thispagestyle{fancy}
+\section{Introduction}
+
+Censorship is an attempt to block the liveness of a database for writes.
+%
+Censorship can be achieved in various ways:
+\begin{itemize}
+  \item Network layer censorship --- eclipse attack, spam
+  \item Consensus level Byzantine equivocation
+  \item System state manipulation (e.g. governance attack, randomness manipulation)
+  \item Queue congestion
+  \item Direct contracting
+  \item Encumbrance (of blockspace futures)
+\end{itemize}
+%
+The previous literature \cite{FPR} has focused on the case of direct contracting.
+%
+I found that some of their formulas are actually much more general than originally claimed.
+
+If the blockspace allocators are pseudonymous and permissionless monopolists, we can assume they will implement optimal mechanisms.
+%
+If the system designers have other objectives, e.g.~core Ethereum protocol designers, then another objective such as welfare maximisation may be preferred.
+%
+In general, in a competitive market, revenue maximisation may be subject to market pressure; a traditional microeconomic model of perfect competition (and Walrasian demand?) may be more suitable.
+%
+Clearly, a model that is capable of evaluating CR under a wide variety of mechanisms and demand and supply conditions is necessary.
+
+\subsection{Supply chain view}
+
+There's a problem we won't be able to deal with: if additional blockspace allocators are to `arrive' in short order, how are we to ensure that their upstream allocations are themselves censorship resistant?
+
+In a BFT distributed database --- our main application --- the blockspace originator is generally a consensus leader i.e.~serial monopolist, and it isn't clear that this assumption can be relaxed without substantially weakening the fault tolerance properties of the consensus system.
+%
+So we cannot ignore the censorship resistance of the upstream, where in the block interval we inevitably have $N=1$?
+
+\subsection{Increasing the number of bidders}
+
+There may be some limits on increasing $N$ arbitrarily; for example:
+\begin{itemize}
+  \item Communication complexity
+  \item Consensus problems (\cite{filecoin})
+\end{itemize}
+Communication complexity issues can be somewhat mitigated by holding a \emph{dynamic} auction instead of a static one; for example, the descending clock (Dutch) auction, while strategically equivalent to first price sealed bid, requires only one bidder to send a message.
+%
+From another perspective, dynamic auctions allow us to posit \emph{dynamic populations} that can expand and contract in response to new information in the market --- for example, information about order flow that has remained unclaimed for some time and hence may be the target of a censorship attempt.
+%
+We should therefore permit dynamic auctions in our framework.
+
+Limits on implementation in smart contracts mean that such mechanisms should have simple rules (so no optimal stopping based on statistical models, yes clock auctions).
+
+Consensus problems are subtler and I will not try to address mitigation strategies here.
+
+\paragraph{Bidder registry}
+In applications, the set of entities authorised to allocate blockspace is listed in some kind of registry.
+%
+For example:
+\begin{itemize}
+  \item 
+    The set of entities that may propose blocks in Ethereum conensus is indexed by a set 20-byte Ethereum addresses listed in a stake registry. 
+    %
+    This registry may be updated with the additional or removal of entities.
+
+  \item
+    Block builders in PBS must register with a relay to participate in the auction.
+
+  \item
+    Preconfirmation providers or `preconfers' in various models of preconfirmations (a type of blockspace forward in which a specific transaction or transaction bundle is guaranteed to land in a certain block) must insert themselves into a registry and put up collateral for their commitments.
+\end{itemize}
+%
+The implementation of the registry is not important for our purposes; as well as a centralised (in the case of the PBS relays) or on-chain (in the case of proposers or preconfers) database, blockspace allocators could simply be the holders of a local authorisation token.
+
+A censoring adversary $\Adversary$ must successfully bribe all blockspace managers that could handle the target OF.
+%
+In a static blockspace auction, if the list of blockspace handlers is publicly accessible, bids are public, and can be matched to an entry in the registry, then this task may be feasible.
+%
+Indeed, $\Adversary$ could publicly announce his offer of payment for abstention and later validate which handlers in the registry did in fact abstain before completing payments.
+
+The task becomes infeasible if the registry contents isn't known to the adversary.
+%
+This may be possible with cryptographic techniques.
+
+\paragraph{Futures}
+%
+The introduction of blockspace futures, where OF handlers may have a time preference to receiving commitments, makes the consideration of dynamic mechanisms inevitable (for example because payment rules depend on time).
+
+
+\subsection{Examples}
+
+Some example scenarios I want to write about:
+\begin{enumerate}
+  \item
+    Suppose, as in \cite{FPR}, that receipt of a bribe offer is taken as evidence that a censorship attempt is ongoing, with the assumption that the amount offered to other parties is similar.
+    %
+    Then a high bribe offer suggests a censorship that is likely to succeed, which also means that if the target agent rejects the bribery offer he is likely to face reduced competition and hence higher profits from the auction.
+    %
+    For this reason, symmetric bribes generally need to beat the expected \emph{monopoly} profit from the auction to have a high probability of success.
+
+    However, a low but non-negligible probability of success can sometimes be achieved with a \emph{low} bribe.
+    %
+    Indeed, a bidder that ignores a low bribe is still likely to face some competition in the scheduler auction, so the bribe only needs to beat the \emph{competitive} profits (and monopoly profits with low probability).
+    %
+    We formalise this line of thinking in Example \ref{ex:non-negligible}.
+
+  \item
+    On the other hand, if a bribe is \emph{not} taken indicative of a censorship attempt that affects other bidders too, then more bidders can, apparently paradoxically, entail lower total bribery cost.
+    %
+    This is because the bribe only needs to beat competitive profits for each of $N$ bidders, which may be less than $1/N$ times the monopoly profits.
+
+    However, I found it difficult to come up with any reasons that this model would be realistic.
+    %
+    One option is to have a long-lived adversary regularly issue `false flag' censorship bribes to individual bidders.
+    %
+    If bidders cannot see bribe offers extended to their competitors, then they cannot tell whether a real censorship attempt is underway.
+
+  \item
+    Another, perhaps more immediately relevant, way that bribes can arise is in the form of threats, for example from regulators (OFAC) or legal contracts.
+    %
+    A legally binding commitment or exposure of this type encumbers the affected agent with a \emph{risk cost} $z$ for breaching (for example, an added insurance premium or legal representation cost).
+    %
+    Such exposures have the following characteristics:
+    \begin{itemize}
+      \item They asymmetrically affect agents in different jurisdictions; there is no reason to expect all bidders to be affected by one regulatory system.
+      \item They are long-lived.
+      \item They tend to be public. (In the case of some legal contracts such as non-compete agreements, they may not be public, but this example is rather speculative.)
+    \end{itemize}
+
+\end{enumerate}
+
+Then we also have to talk about different mechanism examples.
+%
+Like block a, block b とか。
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Censorship auctions}
+
+\subsection{Pointed mechanisms}
+
+We will study procurement auctions $\mathcal{M}$ with $N$ single parameter bidders and allocation and payment functions 
+\[
+  x: \uR^N\rightarrow [N] \qquad \pi:\uR^N\rightarrow \uR^n.
+\]
+%
+A key feature is that in addition to any other actions they may take, bidders always have a choice to \emph{abstain} from bidding, regardless of their type.
+
+\begin{definition}
+
+  A \emph{pointed mechanism} is a mechanism $\mathcal{M}=(\Action,\Theta,U:\Action\times\Theta\rightarrow\R^N)$ each of whose strategy spaces $\Action_i$ are equipped with a distinguished point $\bot\in\Action$ such that
+  \[
+    U_i(\bot,b_{-i})=0 
+  \]
+  for all competitor strategy profiles $b_{-i}$.
+  %
+  The strategy $\bot$ is called \emph{abstention}.
+
+  If $i\in[N]$, then the \emph{complement} of $i$ in $\mathcal{M}$ is the mechanism $\mathcal{M}_{-i}=(\prod_{j\neq i}\Action_j,\prod_{j\neq i}\Theta_j,V)$ where $V_j$ is defined by the formula
+  \[
+    V_j(s,\theta_j) = U_j((s,\bot),\theta_j)
+  \]
+  for each $j\neq i$.
+  
+  A \emph{compatible sequence} of pointed mechanisms is a sequence $(\mathcal{M}_N)_{N\in\N}$ together with isomorphisms $\mathcal{M}_{N-1}\cong (\mathcal{M}_N)_{-N}$ for each $N$.
+  %
+  This notion is needed to study large $N$ asymptotics of mechanisms (without having to deal with infinite products).
+
+\end{definition}
+
+Any mechanism can be canonically transformed into a pointed mechanism by formally adding an element $\bot$ to the action space and assigning the utility $U_i(\bot,b_{-i})=0$ for all strategy profiles $b_{-i}\in\Action_{-i}$.
+
+The strategy space $\Action=\prod_i\Action_i$ of a pointed mechanism comes with a function $\Active:\Action\rightarrow[N]$ that picks out the \emph{active set}, that is, the set of participants that did not choose to abstain.
+
+\begin{example}[Direct revelation]
+
+  A direct revelation mechanism has action space equal to the type space $\Theta_i$.
+  %
+  It can be transformed into a pointed mechanism with (pure) strategy space $\Theta_i\sqcup\{\bot\}$.
+  %
+  Note that some direct revelation mechanisms may already admit a pointing, such as $0\in [0,R]\simeq\Theta_i$.
+
+\end{example}
+
+
+\begin{definition}[Payoff series]
+
+  The \emph{expected payoff} of player $i$ with active set $S\subseteq[N]$ is
+  \[
+    c_{i,S}(v) = \Expectation[U_i(v) \mid \Active(b_{-i})=S].
+  \]
+
+  If the mechanism is symmetric, then this function is independent of $i$ and depends on $S$ only through its cardinality; we write
+  \[
+    c_{n}(v) = \Expectation[U_i(v) \mid \Active(b_{-i})=S]
+  \]
+  for $n\in\N$ and any $S$ with cardinality $n$.
+  %
+  These assemble into a \emph{profit generating function}
+  \[
+    Z(p,q;v) = \sum_{k=0}^N c_{k}(v){N\choose k} q^kp^{N-k}.
+  \]
+  For fixed $v$, $Z(p,q;v)$ is a polynomial in $p$ and $q$.
+  
+\end{definition}
+
+\begin{example}[Single item auction]
+
+  In the focus case of a single item auction where the item cannot be awarded to any abstaining bidder, we have
+  \[
+    c_{i,S}(v) = \Prob[x(b)=i\mid \Active(b_{-i})=S]\cdot v - \Expectation[\pi_i(b)\mid \Active(b_{-i})=S].
+  \]
+  A procurement auction is handled the same way, except the valuation $v<0$ represents the \emph{cost} of providing the service and payments $\pi_i<0$ go the other way.
+
+\end{example}
+
+It's worth singling out the coefficient $c_0=c_\emptyset$ as the \emph{monopolist} case: under typical assumptions (e.g. those ensuring revenue equivalence), the payoff is then the auction \emph{reserve price} $c_0(v)\equiv R$, that is, the maximum fee the auctioneer is prepared to pay.
+%
+The \emph{gap} $c_0-c_1$ may be substantial.
+
+Moreover, by revenue equivalence we have $c_0 \geq c_1 \geq \cdots \geq c_{N-1}$ for any mechanism that implements the efficient allocation, with all inequalities strict if the bidder type distribution is atom free.
+
+
+\begin{definition}
+
+  The \emph{Euler characteristic} of a mechanism $\mathcal{M}_N$ with $N$ players is
+  \[
+    \chi(\mathcal{M}_N)(v) := \sum_{k=0}^{N} (-1)^k { N \choose k } c_k(v).
+  \]
+  For the FPR mechanism, this number is $T-t$ as long as $v\leq t$.
+
+\end{definition}
+
+\begin{lemma} $\frac{\partial Z_N}{\partial p} = NZ_{N-1}$ \end{lemma}
+
+\begin{lemma}[Positivity of coefficients]
+
+  The coefficients of $\frac{\partial}{\partial p}Z(p,1-p)$ are all non-negative.
+  %
+  If $\mathcal{M}$ is gapped, then at least one coefficient is positive.
+  %
+  The same goes for $\frac{\partial^2}{\partial p^2}Z(p,1-p)$.
+  %
+  In particular, $Z(p,1-p)$ is smoothly invertible and convex on $[0,1]$.
+
+\end{lemma}
+%
+\begin{proof}
+
+  It's enough to show that the coefficients of $(\partial/\partial p - \partial/\partial q)Z(p,q)$ are all positive.
+  %
+  We have
+  \begin{align*}
+    \frac{\partial Z}{\partial p}(p,q) &= \sum_{k=0}^{N-1} c_k {N \choose k}(N-k)p^{N-k-1}q^k \\
+    \frac{\partial Z}{\partial q}(p,q) &= \sum_{k=1}^N c_k {N \choose k}kp^{N-k}q^{k-1} \\
+    &= \sum_{k=0}^{N-1} c_{k+1} {N \choose k+1}(k+1) p^{N-k-1}q^{k}.
+  \end{align*}
+  So the coefficient of $p^{N-k-1}q^k$ is given by
+  \[
+    c_k {N\choose k}(N-k) - c_{k+1} {N\choose k+1}  (k+1) =  \frac{N!}{k!(N-k-1)!} (c_k-c_{k+1}) > 0. 
+  \]
+  It follows similarly that the coefficient of $p^{N-k-2}q^k$ in the second derivative is $\frac{N!}{k!(N-k-2)!}(c_k-c_{k+2})\geq 0$.
+
+\end{proof}
+
+\begin{example}[Vickrey auction with uniform type distribution]
+
+  Suppose $\mathcal{M}$ is a second price auction with bidder types uniformly distributed on $[0,1]$.
+  %
+  Then 
+  \[
+    c_k(v) = v \left( 1 - \frac{kv^k}{k+1} \right)
+  \]
+  for all $k$ and $v\in[0,1]$.
+  
+  One can show that the coefficients of $Z(p,1-p)(1)$ are all positive.
+
+\end{example}
+
+\paragraph{Inverse of $Z(p,1-p)$}
+
+Differentiating, we have
+\begin{align*}
+  Z'(q) &= -c_0(N-1)(1-q)^{N-2} + c_1(N-1)(1-q)^{N-2} + O(q) \\
+  &= (N-1)(1-q)^{N-2}(c_1-c_0) + O(q) \\
+  &= (N-1)(c_1-c_0) + O(q)
+\end{align*}
+which is strictly negative in a neighbourhood of $q=0$; unsurprising, since we expect that lowering the offer increases the probability of participation.
+%
+Therefore $Z(q)$ has an analytic inverse $q^*=G(z)$ near $q=0$, and 
+\[
+  G'(Z(q)) = 1/F'(q) \approx \frac{1}{(N-1)(c_1-c_0)}.
+\]
+
+\subsection{Bidder decision problem}
+
+Suppose that each bidder $i$ is offered a bribe $z_i$ to abstain from the auction (after the bidder draws his type but before other actions are taken).
+%
+Suppose that bidders play a mixed strategic plan where they accept the bribe and abstain with weight $\lambda_i(v_i,z_i)\in[0,1]$.
+%
+Then the strategic plan is individually rational if bidder $i$ accepts the bribe only when
+\begin{align*}
+  z_i &\geq \Expectation[U_i(b(v_i,\tilde{v}_{-i})) \mid i\in \alpha(\lambda_{-i}), v_i] \\
+  &= \sum_{S\subseteq [N]\setminus\{i\}} c_{i,S}(v_i) \prod_{j\in S}\Expectation\lambda_j(\tilde v_j) \prod_{i\neq k\not\in S} (1-\Expectation\lambda_k(\tilde{v_k})).
+\end{align*}
+%
+We will distinguish two cases representing the extremes of possibility:
+\begin{enumerate}
+  \item Common value, i.e.~the $v_i$ are deterministics and known to all participants;
+  \item Strictly monotone, i.e.~the function $c_i(v)$ is strictly increasing in $v$ (and the distribution of $\tilde{v}$ is without atoms).
+\end{enumerate}
+
+\paragraph{Common value case}
+Here we can solve for $z$.
+
+
+\begin{example}[Second price common value auction]
+
+  As we show in an earlier example, the coefficients are $c_0 = v$ and $c_k=0$ for $k>0$.
+  %
+  If $z>v$, all bidders accept the bribe.
+  %
+  If $z\in[0,v]$, the bidders pay a mixed strategy defined by the equation $z=vp^{N-1}$; that is,
+  \[
+    p^*(z\mid v) = (z/v)^{1/(N-1)}.
+  \] 
+  We note that it is a strictly increasing and concave function of $z$, and strictly concave if $N>2$.
+  %
+  If $N=2$, we have $p^*(z)=z/v$.
+  
+  Finally, we note here that the logarithmic derivative is 
+  \[
+    \frac{d\log p^*}{dz}(z)= ((N-1)vz)^{-1}.
+  \]
+
+\end{example}
+
+
+\paragraph{Noisy case}
+The noise assumption means that 
+\[
+  \Prob[\lambda_i(\tilde{v_i},z_i)\in(0,1)]=\Prob[z_i=c_i(\tilde{v}_i)] = 0
+\]
+for all $z_i$. 
+%
+We therefore obtain the identity
+\begin{align*}
+  \Expectation[\lambda_i(\tilde{v}_i,z_i)] &= \Prob[\lambda_i(\tilde{v_i},z_i) = 1] \\
+  &= \Prob[z_i > c_i(\tilde{v}_i)] \\
+  &= 1 - F_{c_i(\tilde{v}_i)}
+\end{align*}
+where $F_{c_i(\tilde{v}_i)}$ is the CDF of $c_i(\tilde{v}_i)$.
+
+In the symmetric case, we have $\Expectation\lambda(z)=0$ (i.e.~no one accepts the bribe) if and only if
+\[
+  \Prob[c_{N-1}(\tilde v)<z) = 0.
+\]
+This condition is probably not very realistic in practice.
+%
+So what we should really be looking for is to keep $\Expectation\lambda(z)^N$ as small as possible for $z$ within a reasonable range.
+
+\begin{question}What happens when obtain large $N$ by adding a long tail of bidders with low $\tilde{v}$?\end{question}
+
+\begin{example}[Monopoly profits]
+
+  Suppose that bidder values are very close, so that $\Expectation c_{i,k}(\tilde v_i)$ is small for all $k>0$.
+  %
+  Then we can approximate
+  \[
+    \Expectation c_i(\tilde v_i) \approx \Expectation c_{i,0}(\tilde v_i) \cdot \Expectation \lambda(\tilde v)^{N-1}.
+  \]
+  For simplicity, let's work for now in a model where $\Expectation c_{i,k}(\tilde v_i)$ is exactly zero.\footnote{Note that by revenue equivalence, such a mechanism cannot be efficient. It should not allocate the item if $k>0$, which isn't very realistic.}
+  %
+  Then $\Expectation\lambda(\tilde v,z)$ solves the equation
+  \[
+    x = \Prob[\tilde{c}_0x^{N-1} < z] = F(zx^{1-N})
+  \]
+  where $\tilde{c}_0$ is the monopoly profit and $F$ is its CDF.
+  %
+  Then to achieve a censorship probability of $p=x^N$, we must bribe at least
+  \[
+    z = F^{-1}(x)x^{N-1}.
+  \]
+  
+  Suppose that monopoly profits are distributed according to a power law $F(u) = u^{1/K}$ for $u\in[0,1]$.
+  %
+  Then the bribe per bidder is
+  \[
+    z = x^Kx^{N-1} = px^{K-1}.
+  \]
+  If $K>1$ then a briber can achieve probability $p$ of successful censoring with a total bribe of less than $p\pi$, where $\pi$ is the maximum bribe.
+  
+  So for example, if $N=10$ and $K=3$ then a briber can achieve a non-negligible probability $p=0.1$ of success with a bribe of $0.063$ times the maximum.
+  %
+  While not exactly catastrophic, this shows that the requirement $v_\Adversary\geq N\pi$ is not a hard limit.
+
+\end{example}
+
+\begin{example}[Bidder reputation]
+
+  A general rule of thumb is that the more information the adversary has, the cheaper it becomes to bribe.
+  %
+  For example, consider the case that bidders are partitioned into two sets: a `high reputation' set $[N]$ of bidders that handle most uncensored requests, and a long tail 'low reputation' set $[M]$ that comes into play when the high reputation set has been bought off.
+  %
+  The high reputation set may be quite small; for example, $N=2$ in PBS today (over 90\% of blocks are handled by just two entities).
+
+  Suppose that types and strategies are symmetric within each of the two sets, and that $v_N>v_M$ almost surely. 
+  %
+  We are allowed two bribe amounts $z_N$ and $z_M$ and strategic plans $\lambda_N^*(\tilde{v},z_N)$ and $\lambda_M^*(\tilde{v},z_M)$.
+  %
+  Censorship succeeds with probability $p=\bar\lambda_N(z_N)^N\bar\lambda_M(z_M)^M$.
+
+
+\end{example}
+
+\newpage
+\subsection{Adversary decision problem}
+
+Suppose that our adversary wants to bribe bidders in such a way that they have a high probability of abstention.
+%
+Then we are interested in strategies in a neighbourhood of $q=0$.
+%
+First of all, if $\lambda_i(z_i)=1$ then $z_i\geq c_{i,\emptyset}(\tilde{v})$, so the adversary must offer an amount a.s.~greater than $\sum_{i=1}^N c_{i,\emptyset}(\tilde v_i)$ to ensure certain censorship.
+
+
+The adversary $\Adversary$ has the utility function
+\[
+  U_\Adversary(z;\bar{\lambda}) = v_\Adversary\prod_i\bar\lambda_i - \sum_i\bar\lambda_iz_i,
+\]
+assuming the commitments to abstain cannot be made conditional on other abstentions.
+
+Suppose bidders follow a parametrised set of strategic plans $\lambda_i^*(z\mid v_i)$ in (Bayes-Nash) equilibrium.
+%
+Then the (risk-neutral) adversary optimises according to
+\begin{align*}
+  \Expectation[U_\Adversary(z)] &= \Expectation \left[ v_\Adversary\prod_i\lambda_i^*(z\mid\tilde v_i) - \sum_i\lambda_i^*(z\mid \tilde v_i)z_i \right] \\
+  &= v_\Adversary\prod_i\Expectation[\lambda_i^*(z\mid\tilde v_i)] - \sum_iz_i\Expectation[\lambda_i^*(z\mid\tilde v_i)]
+\end{align*}
+where we used the fact that the types $v_i$ are drawn independently to take the product out of the expectation.
+%
+Introduce the shorthand $\bar{\lambda}_i(z) = \Expectation[\lambda_i^*(z\mid\tilde v_i)]$.
+%
+Then
+\[ 
+  \Expectation[U_\Adversary(z)] = v_\Adversary\prod_i\bar{\lambda}_i(z) - \sum_iz_i\bar{\lambda}_i(z).
+\]
+In the symmetric case, this becomes 
+\[ 
+  \Expectation[U_\Adversary(z)] = v_\Adversary\bar{\lambda}(z)^N - Nz\bar{\lambda}(z)
+\]
+(compare \cite[\S A.6]{FPR}.)
+
+\paragraph{Asymptotics of $U_\Adversary$}
+Since $p^*(z)=G(z)$ on $[c_{N-1},c_0]$ and $G(z)$ solves a polynomial equation $Z(G(z),1-G(z))=z$ of degree $N-1$, we can write
+\[
+  p^*(z)^{N-1} = \chi(\mathcal{M})^{-1}\left( z - \tilde Z(G(z),1-G(z)) \right)
+\]
+where $\tilde Z$ is a polynomial of degree at most $N-2$.
+%
+That is, 
+\[
+  U_a(z) = p^*(z)\left[ \left(\frac{v_\Adversary}{\chi(\mathcal{M})} - N\right) z + o(z) \right].
+\] 
+From this we can see that $U_a(z)>0$ for sufficiently large $z$ iff $v_\Adversary > N\chi(\mathcal{M})$.
+%
+This is only relevant if $c_0$ is also sufficiently large for the asymptotic to kick in.
+  
+\paragraph{Differential analysis of $U_\Adversary$}
+We have
+\begin{align*}
+  \frac{dU_\Adversary}{dz}(z) &= N\left[ v_\Adversary\bar{p}'(z)\bar{p}(z)^{N-1} - (\bar{p}'(z)z + \bar{p}(z) ) \right] \\
+  &= N\left[ \bar{p}'(z)(v_\Adversary\bar{p}(z)^{N-1} - z) - \bar{p}(z) \right]
+\end{align*}
+on $(c_{N-1},c_0)$.
+%
+At the limits we have
+\begin{align*}
+    \frac{dU_\Adversary}{dz}((c_0)_-) &= N\left[ \bar{p}'((c_0)_-)(v_\Adversary-c_0) - 1 \right] \\
+    \frac{dU_\Adversary}{dz}((c_{N-1})_+) &= -c_{N-1}N\bar{p}'((c_{N-1})_+) \leq 0
+\end{align*}
+
+\begin{example}[Second price common value]
+
+  We return to the case of the second price auction with common value $v$.
+  %
+  Recall that $p^*(z)=(z/v)^{1/(N-1)}$ on $[0,v]$.
+  %
+  Then 
+  \[
+    U_\Adversary(z) = v_\Adversary z/v - N(z/v)^{\frac{1}{N-1}}
+  \]
+  for $z\in[0,v]$.
+  %
+  This utility function is convex, therefore optimised at either $0$ or $v$; for censorship resistance we simply need to check the inequality ]
+  \[
+    U_\Adversary(c_0) < U_\Adversary(c_{N-1}) \qquad \Leftrightarrow \qquad v_\Adversary < N.
+  \]
+\end{example}
