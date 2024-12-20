@@ -10,7 +10,7 @@ MACROS = common/macro.tex common/amsthm.tex
 $(TARGET):
 	mkdir -p $@
 
-$(TARGET)/$(NAME).pdf: $(NAME).tex document.tex $(MACROS) | $(TARGET)
+$(TARGET)/$(NAME).pdf: $(NAME).tex document.tex $(MACROS) $(TARGET)/$(NAME).bbl | $(TARGET)
 	$(INVOKER) lualatex -synctex=1 -interaction=batchmode -output-directory=$(TARGET) $(NAME)
 
 build-once: | $(TARGET)
@@ -18,6 +18,13 @@ build-once: | $(TARGET)
 
 debug: | $(TARGET)
 	$(INVOKER) lualatex -synctex=1 -output-directory=$(TARGET) $(NAME)
+
+$(TARGET)/$(NAME).bbl: $(TARGET)/$(NAME).bcf $(NAME).bib
+	$(INVOKER) biber $(basename $<) --quiet
+
+$(TARGET)/$(NAME).bcf: $(NAME).tex
+	$(INVOKER) lualatex -synctex=1 -interaction=batchmode -output-directory=$(TARGET) $(NAME)
+
 
 clean: | $(TARGET)
 	rm $(TARGET)/*

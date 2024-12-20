@@ -45,11 +45,18 @@
 
 \urlstyle{same}
 
+\usepackage[style=numeric]{biblatex}
+\setcounter{biburllcpenalty}{1}   % freely break URLs at lowercase
+
+\usepackage{csquotes} % prevent a warning when using biblatex with babel
+
+\addbibresource{tldr-cr.bib}
+
 \input{common/amsthm}
 \input{common/macro}
 
 \author{Andrew W. Macpherson}
-\title{Censorship resistance in dynamic mechanisms}
+\title{Censorship resistance in dynamic blockspace supply chain mechanisms}
 \begin{document}
 \input{document}
 \end{document}
