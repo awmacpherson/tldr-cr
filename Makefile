@@ -1,7 +1,7 @@
 TARGET ?= ./target
 NAME = tldr-cr
 ENV_NAME = tldr-build
-INVOKER ?= podman run --rm -v $$(pwd):/tex -w /tex $(ENV_NAME)
+INVOKER ?= podman run --rm -v $$(pwd):/tex:Z -w /tex $(ENV_NAME)
 
 all: $(TARGET)/$(NAME).pdf
 
@@ -19,10 +19,10 @@ build-once: | $(TARGET)
 debug: | $(TARGET)
 	$(INVOKER) lualatex -synctex=1 -output-directory=$(TARGET) $(NAME)
 
-$(TARGET)/$(NAME).bbl: $(TARGET)/$(NAME).bcf $(NAME).bib
+$(TARGET)/$(NAME).bbl: $(TARGET)/$(NAME).bcf $(NAME).bib | $(TARGET)
 	$(INVOKER) biber $(basename $<) --quiet
 
-$(TARGET)/$(NAME).bcf: $(NAME).tex
+$(TARGET)/$(NAME).bcf: $(NAME).tex | $(TARGET)
 	$(INVOKER) lualatex -synctex=1 -interaction=batchmode -output-directory=$(TARGET) $(NAME)
 
 
