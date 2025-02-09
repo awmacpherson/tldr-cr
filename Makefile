@@ -1,7 +1,7 @@
 TARGET ?= ./target
 NAME = tldr-cr
 ENV_NAME = tldr-build
-INVOKER ?= podman run --rm -v $$(pwd):/tex:Z -w /tex $(ENV_NAME)
+INVOKER ?= podman run --rm --network none -v $$(pwd):/tex:Z -w /tex $(ENV_NAME)
 
 all: $(TARGET)/$(NAME).pdf
 
