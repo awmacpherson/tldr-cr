@@ -5,60 +5,54 @@
 
   Censorship in blockchain transaction processing systems occurs when an adversary intentionally arranges for exclusion of transaction items.
   %
-  Since the main objective of blockchain systems is to arrange for transaction \emph{inclusion}, successful censorship is an economic inefficiency that can signal the exercise of market power.
+  A design goal of public blockchains is that the cost of making such arrangements be as high as possible.
   %
-  Hence, it is natural to try to combat censorship by introducing competition on the supply side of the blockspace market.
+  Unfortunately, quantifying this cost is complicated by the fact that the incentives of the participants depend on a panoply of hidden factors and the specifics of the censorship scenario.
 
-  We posit, and interrogate, a simplistic \emph{product rule} for censorship resistance: if a transaction could be confirmed by any of $N$ active schedulers, then a transaction fee limit increment of $\delta$ causes the cost of censorship to increase by $N\delta$.
+  In this paper, we argue that the data needed to make sense of the cost of censorship by the most elementary strategy, which we call \emph{contracts for exclusion}, is captured by the structure of a strategic-form scheduling mechanism with the schedulers as players.
   %
-  We find that the product rule is fairly robust to changes in the scheduling mechanism, but fails completely if the censoring adversary is given the power to form atomic coalitions; this includes some situations that seem potentially realistic.
+  The strength of this approach is that it allows us to make statements about censorship resistance of any competitive scheduling environment --- including under novel proposals such as inclusion lists and multiple concurrent proposers --- on an equal footing.
+
+  Given any scheduling mechanism, we formulate the CFE game and find minimal offers that achieve censorship with given probability $p$ in terms of invariants of the underlying mechanism.
   %
-  The rule recovers if we introduce dynamic scheduler populations, yielding a censorship-resistance argument in favour of secondary markets for blockspace futures.
+  For the case $p=1$ we also find conditions under which the cost of censorship so scales linearly in the number of schedulers.
   
 \end{abstract}
 
 \section{Introduction}
 
-In blockchain systems, censorship is generally characterised as a deliberate attempt to prevent or delay a transaction or class of transactions from being posted to the chain.
+In blockchain systems, censorship is characterised as a deliberate attempt to prevent or delay a transaction or class of transactions from being posted to the chain \cite{wahrstatter2024blockchain}.
 %
 Broadly speaking, a blockchain is \emph{censorship resistant} if censorship is `hard' to achieve.
 %
-Censorship resistance is often considered an essential feature of permissionless public blockchains, especially for the functioning of financial primitives \cite{buterin2015problem}.
+Censorship resistance is widely considered a key feature of permissionless public blockchains, especially for the functioning of financial primitives \cite{buterin2015problem}.
 
 In principle, the censorship resistance of a blockchain can be quantified as the minimum cost to achieve censorship by any means.
 %
-However, because of the diversity of available means --- which may target various layers of the technology stack and have different domains of effectiveness --- the estimation of these costs poses a substantial challenge \cite{wahrstatter2024blockchain}.
+Because of the diversity of available means --- which may target various layers of the technology stack and have different domains of effectiveness --- the estimation of these costs in general may pose a substantial challenge.
 %
 To attempt this calculation, we must distinguish and study the costs associated with each censorship strategy in context.
 
-Tautologically, all means to effect censorship of a class $T$ of transaction items fall into one of the following two categories:
+At a high level, every censorship strategy must proceed by arranging that sufficiently many of the parties responsible for deciding which items get included into the chain --- in this paper, we call them \emph{schedulers} --- either cannot or choose not to accept the targeted items.
 %
-\begin{enumerate}
-  \item Arrange that no schedulers are able to handle items in $T$ (e.g.~by hiding them via an eclipse attack \cite{heilman2015eclipse}).
-  \item Arrange that even if schedulers could handle items in $T$, they choose not to.
-\end{enumerate}
+Of these, arranging that a scheduler \emph{chooses} not to accept is a problem of manipulating economic incentives, the subject of this paper.
 %
-The second class of approaches is precisely the class that can be analysed in terms of economic incentives, and is the focus of this paper.
 
-To achieve censorship through incentive manipulation, a censoring adversary must present all schedulers that could handle $T$ with information that either causes them to revise their expected payoffs for handling $T$ or unlocks new actions that are more attractive and mutually exclusive with $T$.
 
-The most direct way to achieve this --- and the most likely to be analytically tractable --- is by presenting the scheduler with a contract that triggers a value transfer in the event that he does not schedule elements of $T$.
+\paragraph{Contracts for exclusion}
 %
-The value transfer must compensate the scheduler for the profit he forgoes by omitting $T$; the cheapest possible such contract is one that \emph{only} requires him to censor $T$, and does not exclude any other potentially lucrative opportunity.
-
-We focus on this case because it is tractable and because it has attracted recent attention \cite{FPR} that has led to proposals to modifying Ethereum's scheduling environment under the guise of censorship resistance \cite{burian2024censorship}.
-
-\subsection{Contracts for exclusion}
-\paragraph{Censorship at the blockspace supply mechanism layer}
-The focus of this paper is censorship resistance of the \emph{blockspace supply mechanism}, that is, the mechanism governing the allocation by \emph{schedulers} of blockspace to transaction items in exchange for payments.
-
-More precisely, we estimate the costs of a particular censorship strategy via \emph{contracts for exclusion}, that is, payment arrangements with schedulers conditioned on the non-inclusion of some specified class $T$ of transaction items \cite{FPR}.
+Of all the strategies to manipulate the incentives of a scheduler so as to make handling some targeted items less attractive, perhaps the easiest to describe is to present him with a \emph{contract for exclusion}, that is, an agreement that triggers a value transfer depending on whether or not he accepts targeted items.
 %
-In such a strategy, an adversary attempts to secure agreements from all schedulers that would be in a position to handle items in $T$ during a target period that they will instead sit out of the market for $T$ throughout that period.
-
-Payment arrangements can take the form of bribes, where the scheduler is paid if he obeys the rule, and threats --- such as the notorious OFAC sanctions \cite{wright2022defi} --- where a cost imposed on the scheduler if he does not.
+To be acceptable to a rational scheduler, the difference between the transfers in the two cases must compensate him for the profit he forgoes by omitting the items.
 %
-These two approaches differ by the payment amounts and directions, but not on the condition; we consider them both on equal footing.
+The cheapest possible such contract is one that \emph{only} requires him to censor $T$, and does not exclude any other potentially lucrative opportunity (see \S\ref{section:replacement}).
+
+While the obvious interpretation of such a contract is as a bribe that is paid if the scheduler agrees to censor, the theory also applies to threats --- such as the notorious OFAC sanctions \cite{wright2022defi} --- where a cost imposed on the scheduler if he does handle the targeted items.
+%
+These two approaches differ by the payment amounts and directions, but not on the condition.
+
+We focus on this case because it is universal, relatively tractable, and because it has been recently been used to motivate novel scheduling mechanisms in the Ethereum chain \cite{FPR,burian2024censorship}.
+
 
 
 
@@ -80,7 +74,7 @@ Exactly how much compensation is required, and hence the cost to an adversary of
 %
 Moreover, the third item --- the scheduler's \emph{type} --- is generally not known to the adversary, who therefore cannot compute ex-ante the minimum compensation the scheduler would accept.
 %
-Instead, the adversary's beliefs about his counterparty's type forms some probability distribution, and the best he can do is make an offer that will succeed with probability at least as great as some threshold $0<p<1$ found to be tolerable.
+Instead, the adversary's beliefs about his counterparty's type forms some probability distribution, and the best he can do is make an offer that succeeds with probability exceeding some threshold $0<p<1$ of his choosing.
 
 While the system planner may have agency over some of the details of the scheduling algorithm, in general he cannot directly control the other two items.
 %
@@ -99,195 +93,216 @@ An adversary that wishes to censor transactions for multiple epochs must therefo
 %
 Estimating the cost of doing so must therefore take into account the types of these various schedulers and their strategic interactions.
 
-In this paper, we argue that the full details of scheduling environments with multiple schedulers whose types may differ are captured by the formalism of mechanism design \cite{milgrom2004putting}.
-%
-In this formalism, the scheduling algorithm, value of the targeted items, and private information of the scheduler, are captured by the outcome function, payoff functions, and type distributions of a strategic form mechanism with schedulers as players.
-%
-If we endow the strategy spaces $\Action$ of our mechanism with a distinguished point $\bot$ representing `do nothing,' then a contract for exclusion is nothing more than an offer of payment to each player to select $\bot$ as their strategy.
-
-\begin{example}
-
-  The rotating block producer mechanism can be modelled as sequentially arriving short-lived bidders; see \cite[Chap.~2]{gershkov2014dynamic}.
-
-\end{example}
-
-\begin{remark}[Negotiation]
-
-  For simplicity, in this paper we mostly assume that the type distributions of schedulers are common knowledge, and that moreover before contracting there is no negotiation phase through which the adversary could elicit additional private information about the type of his counterparty: he must simply make a take-it-or-leave-it offer based on the common prior.
-
-\end{remark}
-
-
-There are also systems that allow multiple schedulers to participate in constructing the block over the course of a single epoch:
+There are also systems that allow multiple schedulers to participate in constructing the schedule for a single epoch:
 %
 \begin{itemize}
 
   \item 
     In Filecoin's expected consensus system, a random number of consensus nodes are elected each epoch to construct a block; the resulting blocks are concatenated and deduplicated.
 
-  \item
-    In Ethereum's proposer-builder separation,
+    Similar ideas, based on merging the blocks produced by multiple consensus nodes, have started to appear in the Ethereum context \cite{FPR,burian2024censorship}.
 
   \item
-    Recent proposals for imposing constraints on blocks to force the inclusion of certain transactions allows the creators of these lists to act as schedulers in addition to the builder of the main block.
+    In Ethereum's proposer-builder separation \cite{thegostep2021mevboost}, multiple builders construct tentative schedules and compete in a single item auction to have their schedule committed.
 
   \item
-    Ideas for multiple concurrent proposers have been floated to increase censorship resistance \cite{FPR}.
+    So-called inclusion lists impose constraints on blocks to force the inclusion of certain transactions, allowing the creators of these lists to act as schedulers in addition to the builder of the main block \cite{thomas2024forkchoice}.
 
 \end{itemize}
 %
-The formalism of contracts for exclusion allows us to study censorship resistance quantities under these, or any other mechanism, on an equal footing.
+Some of these ideas have been introduced with the explicit goal of improving censorship resistance; for such proposals, therefore, it would be very useful to have a framework to quantify their effect.
 
+In this paper, we argue that the full details of scheduling environments with multiple schedulers whose types may differ are captured by the formalism of mechanism design \cite{milgrom2004putting}.
+%
+In this formalism, the scheduling algorithm, value of the targeted items, and private information of the scheduler, are captured by the outcome function, payoff functions, and type distributions of a strategic form mechanism with schedulers as players.
+
+If we endow the strategy spaces $\Action$ of our mechanism with a distinguished point $\bot$ representing `do nothing,' then a contract for exclusion adjusts incentives by introducing a value transfer to each player who selects $\bot$ as their strategy.
+%
+The cost of censorship at chance bound $p\in[0,1]$ is then a numerical invariant of the (pointed) scheduling mechanism.
+
+
+
+\begin{example}
+
+  The rotating scheduler mechanism with distinct schedulers at every time step can be modelled as sequentially arriving short-lived bidders; see \cite[Chap.~2]{gershkov2014dynamic}.
+
+\end{example}
+
+By couching the scheduling environment as a mechanism design problem, we also give ourselves easy access to an inventory of standard auction formats for introducing competition at the scheduler level.
+%
+With the flexibility of being able to reason about censorship under arbitrary mechanisms, we can do unrestricted optimisation over the mechanism design space, selecting on other properties of interest such as incentive compatibility or credibility.
+
+
+
+\subsection{Results}
+\paragraph{Bounding censorship resistance}
+
+In light of the preceding discussion, we introduce the following definition:
+
+\begin{definition}[Cost of censorship]
+
+  The \emph{cost to censor} $\CC{p}(\Mechanism)$ a blockspace supply mechanism $\Mechanism$ at chance bound $p\in[0,1]$ is the smallest total amount that can be offered to schedulers in order to achieve an overall probability of at least $p$ that the target items are excluded.
+
+\end{definition}
+
+
+
+
+\begin{example}[Single scheduler, posted price]
+
+  Suppose $T$ is a single transaction with transaction fee $\tau$, and let there one scheduler having marginal cost $\tilde{\theta}>0$ for handling $T$.
+  %
+  If the scheduler handles $T$, he receives the full fee payment $\tau$, for a profit of $\tau-\tilde{\theta}$.
+  %
+  The lowest offer that would be accepted by the scheduler with probability at least $p$, and hence the cost to censor at threshold $p$, is $\CC{p}=\tau+Q_{-\tilde{\theta}}(p)$, where $Q_{\tilde{\theta}}:[0,1]\rightarrow\R$ is the quantile function of $\tilde{\theta}$.
+
+\end{example}
+
+
+\begin{example}[Multiple schedulers, posted price]
+
+  Let $T$ be a single transaction with fee limit $\tau$ and posit $N$ schedulers, each with vanishing marginal costs.
+  %
+  Suppose that each scheduler makes an independent decision about whether to declare himself `in the market' for handling $T$.
+  %
+  Then, if any scheduler makes such declaration, some mechanism selects one and awards him the transaction fee, and the transaction is included; otherwise it is not.
+
+  If exactly one scheduler declares himself active, then he stands to gain a sure monopoly profit of $\tau$.
+  %
+  Hence, if a scheduler sees that a censorship attempt is ongoing and believes his competitors will accept their offers and sit out, then he will accept the offer presented to him only if it beats his expected monopoly profit of $\tau$.
+  %
+  A censoring adversary must therefore offer at least $\tau$ to each of the $N$ schedulers, putting the total cost of censorship (at $p=1$) at $N\tau$.
+  
+  This is the intuition behind the \emph{product law}, which poses that the cost of censorship is linear in the number of schedulers and the transaction fee limit.
+  %
+  See Theorem \ref{thm:product-law} for a precise statement.
+
+\end{example}
+
+\begin{example}[Multiple schedulers, second price auction]
+
+  Consider a setting like the previous example, except that the mechanism that selects a scheduler to handle the item is a second price procurement auction.
+  %
+  That is, each scheduler puts up a \emph{quote} $f\leq \tau$ to handle the item, and the scheduler who offers the lowest quote handles the item, with transaction fee equal to the second lowest quote or, if only one scheduler participates, the `reservation price' $\tau$.
+  %
+  Since each scheduler has vanishing costs, their dominant strategy (in the absence of censorship bribes) is to quote $f=0$; the transactor then pays $\tau$ if exactly one scheduler quotes, and $0$ if more than one does.
+  %
+  By the same logic as before, the cost of censorship is $N\tau$.
+  
+  The outcomes are quite similar to those of the 'conditional tipping` system introduced in \cite{FPR}; the perspective of this paper is outcomes of this form are actually a natural consequence of competition among schedulers, and do not need to be explicitly programmed into the definition of the mechanism.
+
+\end{example}
+
+In order to state our general results on $\CC{p}$, it is necessary to dip our toes into some of the details of the model.
+%
+Suppose an adversary $\Adversary$ makes an offer $z_i\geq 0$ to each scheduler $i$ in a population $\Population$ to sit out of the scheduling mechanism.
+%
+Each scheduler accepts this offer if and only if $z_i$ exceeds $i$'s value function $\Util_i(\tilde\theta_i)$, that is, his expectation of the payoff he could derive by participating given his type $\tilde\theta_i$.
+
+From $\Adversary$'s perspective, $i$ accepts with probability $\lambda_i=\Prob[\Util_i(\tilde\theta_i)\leq z_i] = F_{\Util_i(\tilde\theta_i)}(z_i)$.
+%
+The probability of successful censorship is the probability that all schedulers accept their offers, which is $p=\prod_i\lambda_i$ if these events are independent.
+%
+In this case, we say that the offer $z\in\uR^\Population$ is \emph{$p$-effective}.
+%
+Then $\CC{p}(\Mechanism)$ is simply the infimum of $\sum_iz_i$ over the set of $p$-effective offers $z$.
+
+Now, $i$'s estimation of his payoffs naturally depend on whether his competitors participate or sit out of the mechanism.
+%
+A subtlety therefore emerges if scheduler $i$ is aware that a censorship attempt is going on --- which, given that he himself has received an offer of reward for abstention, is reasonable to suspect --- and hence that his competitors are likely to have also received an offer to abstain.
+%
+This complicates the estimation of $\lambda_i=\Prob[\Util_i > z_i]$, which now also depends on $\lambda_j$ for $j\neq i$, and hence in turn on the bribes $z_j$ offered to $i$'s competitors.
+%
+The calculation now depends on identifying a Nash equilibrium.
+
+In this paper, as in \cite{FPR}, we mainly consider the case where the bribe offered to all schedulers is \emph{common knowledge} (but see \S\ref{section:asymmetry}).
+%
+In this case, we are able to construct $\lambda$-effective Nash equilibria for any `abstention vector' $\vec{\lambda}\in[0,1]^\Population$ of acceptance probabilities.
+
+\begin{theorem}[Corollary \ref{thm:equilibrium-from-quantile}]
+
+  For any truthful mechanism $\Mechanism$ and any abstention profile $\bar\lambda\in[0,1)^\Population$, there exists an offer $z\in\uR^\Population$ and a Bayes-Nash equilibrium of the abstention game $\Mechanism(z)$ with abstention profile dominating $\lambda$. 
+  %
+  Moreover, $z$ can be chosen minimal among such offers.
+  
+  Furthermore, there exists a sequence of functions $Z_i(\tilde\theta_i,\lambda_{-i})$ depending only on $\Mechanism$ which:
+  %
+  \begin{itemize}
+    \item
+      are polynomial of degree $N-1$ in the $\lambda_{-i}$;
+    \item
+      have coefficients expressible as sums of value functions $\Util_{i,S}(\tilde\theta_i)$ of the underlying mechanism conditioned on subsets $S\subseteq\Population$ remaining active;
+  \end{itemize}
+  %
+  such that in the aforementioned Nash equilibrium, scheduler $i$ abstains, resp.~remains active, whenever
+  %
+  \[
+    z_i > Z_i(\tilde\theta_i,\lambda_{-i}) \qquad \text{resp.} \qquad z_i < Z_i(\tilde\theta_i,\lambda_{-i}).
+  \]
+  
+\end{theorem}
+
+The polynomials $Z_i(\tilde\theta_i,\lambda_{-i})$ are defined by an explicit formula in \S\ref{section:dsic}.
+%
+The minimal offer can be constructed as the $\lambda_i$-quantile of $Z_i$.
+
+\begin{corollary}[Upper bounds for the cost of censorship]
+
+  For any $\lambda\in[0,1]^\Population$,
+  %
+  \[
+    \CC{\prod_{i=1}^N\lambda_i}(\Mechanism) \leq \sum_{i=1}^N Q_{Z_i(\tilde\theta_i,\lambda_{-i})}(\lambda_i) .
+  \]
+  %
+  For any $p\in[0,1]$, we have
+  %
+  \[
+    \CC{p}(\Mechanism) = \inf_{\prod_i\lambda_i \geq p} \left(\sum_{i=1}^N Q_{Z_i(\tilde\theta_i,\lambda_{-i})}(\lambda_i) \right).
+  \]
+  
+
+\end{corollary}
+
+
+Since upper bounding the cost of censorship is as simple as constructing effective offers, this gives us a machine to construct a lot of upper bounds.
+%
+As protocol designers or transaction originators, however, we might be more interested in establishing \emph{lower} bounds.
+%
+In the special case $p=1$, the infimum collapses to a single element.
+
+\begin{corollary}[Sure censorship]
+
+  We have $\CC{1}(\Mechanism) = \sum_{i=1}^N Q_{Z_i(\tilde\theta_i,1)}(1)$.
+
+\end{corollary}
+
+For $p<1$, we may wonder whether we can restrict attention to a subset of the simplex $\prod_{i\in\Population}\lambda_i=p$, such as the diagonal $\lambda_i = p^{1/N}$.
+%
+Unfortunately, even in the symmetric IPV case that scheduler types are i.i.d, this turns out not to be the case (\S\ref{section:asymmetry}), and constructing lower bounds requires consideration of arbitrary vectors of acceptance thresholds.
+
+Nonetheless, if the conditional payoffs $\Util_{i,S}(\Mechanism)$ of the scheduling mechanisms are computationally tractable and we can sample efficiently from the distribution of $\tilde\theta_i$, then the quantile functions $Q_{Z_i}$ can be estimated using Monte Carlo methods and the infimum approximated via a grid search.
 
 \paragraph{Scaling censorship resistance}
 
 The rotating scheduler architecture of public blockchains such as Bitcoin and Ethereum is generally thought to increase the difficulty of censoring transactions over a period of many blocks.
 %
-Indeed, if we allow ourselves to assume that every block over the period of interest is made by a different scheduler, it is quite easy to construct an informal argument as to why the cost of censorship scales linearly in the number of blocks: in this case, each scheduler's payoff depends only on its actions and the actions of those that came before it, which it cannot influence;
+If we allow ourselves to assume that:
 %
-(See \cite[\S6.1]{FPR} for a special case of this.)
-
-
-By extension of that same reasoning, recent proposals \cite{FPR,2024forkchoice} have sought to improve the single-slot censorship resistance (or `neutrality' \cite{ma2024uncrowdable}) properties of the Ethereum chain by increasing the number of parties capable of allocating blockspace in each slot.
-
-\begin{example}[Multiple schedulers, pay as bid]
-
-  Let $T$ be a single transaction with fee limit $\tau$ and posit are $N$ schedulers, each with vanishing marginal costs.
-  %
-  Each scheduler could in principle earn a profit of $\tau$ by handling $T$; therefore a successful coalition must offer each scheduler at least $\tau$ for abstaining.
-  %
-  This puts the total cost of censorship (at $p=1$) at $N\tau$.
-  %
-  This is the intuition behind the \emph{product law}, which poses that the cost of censorship is linear in the number of schedulers and the transaction fee limit.
-
-\end{example}
-
-
-
-
-\subsection{Censorship and efficiency}
-
-Contrast spam and application layer censorship \cite[Def.~4]{wahrstatter2024blockchain}, which do collateral damage in the sense of also being mutually exclusive with transactions outside the targeted flow.
-
-\paragraph{Censorship and efficiency}
-Censorship by contracts for exclusion is distinguished from other approaches to censorship by the fact that it results in an economically inefficient allocation of blockspace --- namely, one in which free blockspace fails to be allocated even though there are available transaction items that offer a fee in excess of the processing costs of some scheduler that could handle it.
+\begin{enumerate}
+  \item Every block over the period of interest is made by a different scheduler;
+  \item an adversary may enter into contracts with schedulers as they arrive, in time for the scheduler to make decisions about item inclusion;
+\end{enumerate}
 %
-
-
-By way of contrast, an outcome in which blocks are filled with spam that pays higher transaction fees than targeted `legitimate' transaction material is efficient.
+then it is quite easy to construct an informal argument as to why the cost of censorship scales linearly in the number $N$ of blocks: since in this case, each scheduler's payoff depends only on its decision and the actions of those that came before it, equilibrium can be computed by solving the decision problem at each block in order, i.e.~without needing to take into account strategic play.
 %
-That is, from the perspective we adopt in this paper, such outcomes are a case of the blockspace supply mechanism functioning as intended.
-%
-Meanwhile, attacks that focus on manipulating some other layer (such as the network) proceed by modifying the \emph{environment}, for example by limiting the set of transactions visible to each scheduler.
-%
-They have no bearing on the efficiency of the method by which transactions are selected from that environment for inclusion.
+If the marginal value of the item is simply a time-invariant transaction fee $f$, the cost to censor in this fashion is therefore $fN$; compare \cite[Ex.~2]{FPR}.
 
+Based on similar intuition, recent proposals \cite{FPR,thomas2024forkchoice} have sought to improve the single-slot censorship resistance (or `neutrality' \cite{ma2024uncrowdable}) properties of the Ethereum chain by increasing the number of agents capable of allocating blockspace in each slot.
 
-\begin{remark}[Efficiency angle]
-
-  The idea that introducing multiple independent schedulers can improve the economic efficiency of transaction processing in a blockchain network aligns with general microeconomic intuition: if one scheduler is unable or unwilling to handle a given item, another stands ready to offer the service in his stead.
-  %
-  Taking the idea to its limit, in an idealised market of perfect competition among schedulers, the inefficiency effected by censorship cannot exist.
-
-  Note that even under perfect competition, other censorship strategies such as spam remain equally feasible.
-
-\end{remark}
-
-
-\subsection{Previous work}
-Prior art on defining censorship and censorship resistance in blockchains and other information systems:
-\begin{itemize}
-  \item 
-    \cite{wahrstatter2024blockchain} captures the \emph{intentional} angle and focuses on inclusion, rather than ordering.
-    %
-    The authors identify several of the approaches to censorship discussed here \cite[\S4.3]{wahrstatter2024blockchain}, notably application layer censorship and various consensus layer faults (e.g.~failure to attest).
-    %
-    Its main example appears to be the OFAC sanctions.
-
-  \item
-    Some earlier authors who cite the importance of the decentralisation of the scheduler set to censorship resistance: \cite{gencer2018decentralization,silva2020impact}.
-
-  \item
-    Vitalik \cite{buterin2015problem} mentions the LIBOR manipulation as typical of the type of `manipulative' coalition that censorship resistance might aim to prevent.
-
-  \item
-    Earlier work on censorship in document retrieval systems \cite{perng2005censorship} focuses on the ability of an adversary to inhibit retrieval of information, i.e.~reads, rather than adding new information to a database.
-    %
-    This work highlights the importance of distinguishing selective censorship from total blackout.
-  
-  \item
-    Some authors \cite{danezis2004economics,FPR} attempt to establish motivations for a censoring adversary; we prefer to black box it.
-
-  \item The rotating block producer story is widely understood to be important in ensuring the timeliness of transaction inclusion. The idea is implicit, though not really interrogated, in the Bitcoin whitepaper \cite[\S5]{nakamoto2008bitcoin}: \emph{New transaction broadcasts do not necessarily need to reach all nodes. As long as they reach many nodes, they will get into a block before long.}
-
-  \item Concerns about delays in transaction inclusion surface in the Bitcoin literature under the guise of `efficiency.' \cite{pappalardo2018blockchain}. Concerns about deliberate censorship do not seem to be widely discussed in the earlier literature.
-\end{itemize}
-
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\newpage
-
-\section{Model}
-
-
-Consider a mechanism in which a population $\Population$ of schedulers competes to sequence a transaction item.
-%
-Exactly one $x$ of the active schedulers will be selected to handle the item, incurring a cost $\theta_x\geq 0$ which is known $x$ at decision time.
-%
-Each scheduler $i$ receives a fee $f_i(s)$ --- under classical auction formats, $f_i=0$ unless $i$ handles the item.
-
-We will study situations in which an adversary $\Adversary$ seeks to enter into an agreement with each scheduler such that scheduler $i\in\Population$ receives a `bribe' $z_i\geq 0$ if and only if he chooses to abstain from the auction for the targeted item.
-
-
-
-
-
-
-
-\begin{definition}[Cost of censorship]
-
-  The \emph{cost to censor} $\CC{p}(\Mechanism)$ a blockspace supply mechanism $\Mechanism$ at chance bound $p\in[0,1]$ is the smallest total bribe that can be offered to schedulers in order to achieve an overall probability of at least $p$ that the target items are excluded.
-
-\end{definition}
-
-In this definition, details of the environment that affect the cost of censorship are absorbed into the definition of the mechanism $\Mechanism$.
-%
-For example, transaction fee limits form part of the definition of the allocation rule of $\Mechanism$, while processing costs or opportunity costs of schedulers are incorporated into the distribution of preference types of the scheduler population.
-
-Suppose the bribing adversary stands to gain a payoff of $v_\Adversary>0$ for successfully preventing allocation of the item.
-%
-Suppose $\Adversary$ pursues a strategy that induces schedulers to exclude the targeted flow with a total probability of $p\in[0,1]$.
-%
-Then the best possible expected payoff that $\Adversary$ can achieve is
-%
-\[
-  U_\Adversary(z;\bar{\lambda}) = pv_\Adversary - \CC{p}(\Mechanism).
-\]
-%
-A rational, risk-neutral adversary will therefore do nothing as long as $\CC{p}(\Mechanism)/p > v_\Adversary$.
-
-This leads us to make the following definition:
-%
-\begin{definition}[Censorship resistance]
-
-  A mechanism $\Mechanism$ is $K$-\emph{censorship resistant} if $\CC{p}(\Mechanism)/p>K$ for all $p\in(0,1]$.
-
-\end{definition}
-
-\begin{example}[Single scheduler, pay as bid]
-
-  Suppose $T$ is a single transaction having an attached transaction fee limit $\tau$, and let there one scheduler having marginal cost $\tilde{\theta}>0$ for handling $T$.
-  %
-  If the scheduler handles $T$, he receives the full fee payment $\tau$, for a profit of $\tau-\tilde{\theta}$.
-  %
-  The cost to censor is $\CC{p}=\tau+Q_{-\tilde{\theta}}(p)$, where $Q_{\tilde{\theta}}:[0,1]\rightarrow\R$ is the quantile function of $\tilde{\theta}$.
-
-\end{example}
-
-
+If we restrict ourselves to the limited context of zero failure tolerance and mechanisms in which the scaling behaviour of scheduler payoff can be computed in terms of a simple `fee limit' $\tau$, we find the linear scaling rule holds abstractly:
 
 \begin{theorem}[Product law for sure censorship]
+  \label{thm:product-law}
 
   Let $\Mechanism_\tau$ be a family of efficient single item auctions with reservation price $\tau$.
   %
@@ -303,262 +318,235 @@ This leads us to make the following definition:
   If there exist schedulers with arbitrarily small costs, then $\CC{1}(\Mechanism_\tau) = N\tau$.
   
 \end{theorem}
+
+Are there any general laws for how censorship cost scales with the number of active schedulers?
 %
-\begin{proof}
+Do the laws extend to scenarios with uncertainty about scheduler types and where positive censorship failure rate is tolerated?
+%
+I don't know, but in this paper we find that calculations in specific scenarios can be surprisingly tractable.
 
-  A single item auction with reserve $\tau$ is efficient if the item is allocated to the bidder with highest type if this type is greater than $\tau$; otherwise the item is withheld.
-  %
-  We don't need to place any restrictions on the family other than the bidder type distributions remain constant, though it is natural to consider a family whose description has a natural parameter $\tau$ such as a traditional first or second price auction.
-  %
-  The argument proceeds by Myerson's payoff equivalence theorem \cite[Thm.~3.3]{milgrom2004putting}, which states that the expected payoffs for each bidder depend only on the allocation rule as a function of costs --- here fixed by efficiency --- and the expected payoff at some reference point in type space, which here we may take as the greatest lower bound of the support of the distribution function of scheduler costs.
+\subsection{Previous work}
 
-  For any mechanism $\Mechanism$, we have $\CC{1}(\Mechanism)=Nz^*_\Mechanism(1)$, where
+The importance to blockchains of having multiple independent entities able to produce blocks and vote on the canonical chain is, of course, already recognised in the Bitcoin whitepaper.
+%
+On the the effect of miner count on timely and reliable transaction inclusion, Nakamoto writes: \emph{New transaction broadcasts do not necessarily need to reach all nodes. As long as they reach many nodes, they will get into a block before long.} \cite[\S5]{nakamoto2008bitcoin}.
+%
+Attempts to quantify this property in the Bitcoin literature focused on the latency of transaction inclusion in the presence of network failures \cite{pappalardo2018blockchain} without explicitly considering intentional censorship.
+
+Although the early Bitcoin community was undoubtedly aware of the threat of deliberate censorship as well as benign network failures, the specific attack vector of targeted transaction exclusion by cabals of miners does not appear to have attracted much discussion unti the 2015 post of Buterin \cite{buterin2015problem}.
+%
+This post also highlighted the indispensability of the censorship resistance property, including over short periods, for the proper functioning of financial primitives such as loans.
+
+Subsequently, academia has picked up this thread of reasoning and made the link between decentralisation of the scheduler set and censorship resistance \cite{gencer2018decentralization,silva2020impact}, and especially in the wake of the OFAC sanctions of Tornado Cash \cite{wahrstatter2024blockchain}.
+%
+Discussion of the multiplicity of approaches to censorship appears in \cite[\S4.3]{wahrstatter2024blockchain}.
+
+Outside of the blockchain literature, some scattered work has considered censorship in other types of information systems such as file sharing networks \cite{perng2005censorship,danezis2004economics}.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Model}
+\label{section:model}
+
+We introduce the following objects:
+%
+\begin{itemize}
+  \item 
+    A population $\Population$ of \emph{schedulers}, which for convenience we sometimes identify with the set $\{1,\ldots,N\}$;
+  \item 
+    For each scheduler $i\in\Population$, a \emph{type space} $\Theta_i$.
+    
+    In examples, we will focus on schedulers with a single type parameter $\theta_i\in\uR$ representing the marginal cost to handle the targeted items.
+  \item
+    A commonly known distribution $F_{\tilde\theta}$ over the type space $\Theta=\prod_{i\in\Population}\Theta_i$.
+    %
+    A $\Theta_i$-valued random variable having this distribution is written $\tilde\theta_i$.
+    %
+    We always assume that the $\tilde\theta_i$ are independent.
+  \item
+    For each $i\in\Population$, a strategy space $\Action_i$ with a distinguished point $\bot_i$ representing \emph{abstention};
+  \item
+    \emph{Reward functions} $U_i:\Action \rightarrow \R$ for each $i\in\Population$;
+  \item
+    Given a strategy profile $s\in\Action$, the \emph{active set} 
+    \[
+      \Population_\Active(s) := \{i\in\Population \mid s_i \neq\bot_i\} 
+    \] 
+    is the set of schedulers that do not abstain.
+    %
+    For every subset $S\subseteq\Population$ and $i\in S$, a selected solution $s^*_{i,S}:\Theta_i\rightarrow\Action_i$ such that $s_S^*(\theta)\in\prod_{i\in S}\Action_i$ defines a Bayes-Nash equilibrium among the players in $S$ given that $\Population_\Active = S$.
+    
+    If $\Mechanism$ is DSIC, these don't depend on $S$.
+
+\end{itemize}
+%
+%Details of the coherence conditions required on the distinguished points $\bot_i$ are discussed in the appendix.
+
+After schedulers learn their types, but before they decide on a strategy, an adversary $\Adversary$ may offer each scheduler a direct payment $z_i\in\uR$ to \emph{abstain}, i.e.~choose the strategy $\bot_i$.
+%
+This defines a new mechanism $\Mechanism(z)$, with player populations, types, and strategy spaces as before, and value functions defined by the formula
+%
+\[
+  U_{i,\Mechanism(z)}(s) = \left\{\begin{array}{ll} 
+    U_{i,\Mechanism}(s) & s_i \neq \bot_i \\
+    U_{i,\Mechanism}(s) + z_i & s_i = \bot_i
+  \end{array}\right.
+\]
+%
+We will be interested in Nash equilibria of the modified game, and especially the probability that all players choose abstention under such equilibria.
+
+
+
+\subsection{Sure censorship}
+
+We focus first on the case of \emph{sure censorship}, that is, $\CC{1}(\Mechanism)$.
+%
+By definition, $Z_i(\tilde\theta_i,1) = \Util_{i,\{i\}}(\theta_i)$ is $i$'s expected payoff given that he has the monopoly.
+%
+We therefore have
+%
+\[
+  \CC{1}(\Mechanism) = \sum_{i\in\Population} \Util_{i,\{i\}}(\theta_i^*)
+\]
+%
+where $\theta_i^*\in\argmax_{\supp(\tilde\theta_i)} \Util_{i,\{i\}}$ is a type that maximises monopoly payoffs.
+%
+In particular, if the support of the type distribution is compact and the monopoly payoff functions are continuous, then $\CC{1}(\Mechanism)$ is finite.
+
+
+
+\begin{definition}[Efficient auctions with reservation price]
+
+  A \emph{single item procurement auction} is a mechanism in which:
+  %
+  \begin{itemize}
+    \item Type spaces are an interval in $\uR=[0,\infty)$, and represent the marginal cost of handling the item;
+    \item The utility functions have the form
+    \[
+      U_i(s,\tilde\theta) = f(s) - I_{i = x(s)}\tilde\theta
+    \]
+    where $f:\Action\rightarrow \R^\Population$ defines a fee schedule (paid by the item source to the schedulers) and $x:\Action\rightarrow \Population$ selects a single scheduler to handle the item, and $I_{i=x(s)}=1$ when $i=x(s)$ and $0$ otherwise.
+  \end{itemize}
+
+  A single item procurement auction $\Mechanism$ is \emph{efficient with reservation price $\tau$} if the allocation rule as a function of types satisfies
+  %
   \[
-    z^*_\Mechanism = \inf\left\{z\in\uR \mid z \underset{a.s.}{\geq} \Util_0(\tilde{\theta}) \right\};
+    x(\theta) \in \argmax\{\theta_i \mid i\in\Population\} 
   \]
-  that is, $z^*_\Mechanism$ is the smallest bribe that exceeds the payout $\Util_0(\tilde{\theta})$ expected by a monopsony bidder with probability $1$.
   %
-  Thus we are reduced to showing that $\partial z^*/\partial\tau (\Mechanism_\tau) \equiv 1$.
+  whenever $\theta_i\geq \tau$ for some $i\in\Population$, otherwise $x(\theta) = \bot$ (i.e.~the item is not allocated).
 
-  If $\tau \underset{a.s.}{\leq} \tilde\theta$ then the item is never allocated and $\CC{1}(\Mechanism_\tau)=0$.
-  %
-  Assume $\Prob[\tau > \tilde\theta]>0$, which is true for sufficiently large $\tau$.
+\end{definition}
 
-  Now, if $\theta\leq \tau$ and $\theta \underset{a.s.}{\leq} \tilde\theta$, then by efficiency a bidder with type $\theta$ always wins the item.
-  %
-  That is, $\Prob[i\text{ wins}  \mid \tilde{\theta_i} = \theta] = 1$ and so $\Util_0(\theta) = \Expectation_B[\tilde{f}] - \theta$, where $\tilde{f}$ is the fee received by the winning bidder and $\Expectation_B$ is the expectation operator conditioned on the information available to that bidder.
-  %
-  By the payoff equivalence theorem, $\Expectation_B[\tilde{f}\mid\tilde{\theta}=\theta] = \tau$, since this is what the winning bidder pays in a second price auction with reserve fee $\tau$ and the latter is also efficient.
-  
+\begin{proof}[Proof of Theorem \ref{thm:product-law}]
 
-  Let $\theta_0=\sup\{\theta\in\R \mid \Prob[\tilde{\theta}\leq\theta ]= 0\}<\tau$.
+  Using $\Util_{i,\{i\}}(\tau) = 0$ as a reference point, we apply Myerson's payoff equivalence theorem \cite[Thm.~3.3]{milgrom2004putting} to identify the payoff functions $\Util_{i,\{i\}}(\theta_i)$ with those of the second price auction with reserve $\tau$; that is, $\Util_{i,\{i\}}(\theta_i) = (\tau-\theta_i)_+$.
   %
-  In other words, $\theta_0$ is the greatest lower bound of the support of the distribution function of $\tilde{f}$.
+  If $k\leq\tau $ is a greatest lower bound for $\tilde\theta_i$, then $\CC{1}=\sum_{i\in\Population}\Util_{i,\{i\}}(k) = N(\tau - k)$.
   %
-  It follows from Myerson's Lemma that $\Util_0(\theta)$ is a continuous function of $\theta$.
-  %
-  Thus $z^*=\Util_0(\theta_0) = \tau-\theta_0$.
   \qedhere
- 
 
 \end{proof}
 
 
-\subsection{Bounding censorship cost}
+\subsection{Solution in truthful case}
+\label{section:dsic}
 
-To bound the cost of censorship $\CC{p}$ above, it is enough to exhibit an offer $\vec{z}$ that achieves censorship with probability at least $p$.
+Let's suppose now that $\Mechanism$ is DSIC, so that in particular the selected strategic plans $s^*_{i,S}$ do not depend on the competitor set $S$.
 %
-Then $\CC{p}\leq \sum_iz_i$.
-
-
-\begin{proposition}[Upper bounding censorship cost with the distribution function]
-
-  Suppose $\Mechanism$ is invertible.
-  %
-  The following conditions on an offer $\vec{z}\in\uR^N$ are equivalent:
-  %
-  \begin{enumerate}
-    \item 
-      $F_{\Util_i(\tilde\theta_i,z_{-i})}(z_i) \geq \lambda_i$ for each $i=1,\ldots, N$.
-
-    \item
-      $\CC{\prod_{i=1}^N\lambda_i}(\Mechanism) \leq \sum_{i=1}^N z_i$.
-  \end{enumerate}
-
-\end{proposition}
-
-This means in particular that if scheduler margins are tight with high probability, that is, costs for most schedulers are clustered near to the max fee $\tau$, then the cost to censor can be reasonable even if schedulers occasionally achieve high margins.
-
-\begin{corollary}
-
-  Suppose $\Mechanism$ is invertible.
-  %
-  Then $\CC{p}(\Mechanism) \leq N\cdot Q_{\Util(\tilde\theta,z)}(p^{1/N})$.
-
-\end{corollary}
-
-\begin{corollary}[Cost to censor in a market with tight scheduler margins]
-
-  Suppose that scheduler costs are $(q,\epsilon)$-concentrated near $\tau$, i.e.~$\Prob(|\tau-\tilde\theta| \leq \epsilon) \geq q$.
-  %
-  Then $\CC{q^N}(\Mechanism)\leq N\epsilon$.
-
-\end{corollary}
-
-To bound $\CC{p}$ below, say by some $K$, we must show that for any $\vec{z}$ satisfying the constraint
+This is going to allow us to restrict attention to strategies in which each scheduler either plays $s^*_i(\theta_i)$ or $\bot_i$, or a mixture thereof, depending on whether $z_i$ beats his expected payoff from participating.
 %
-\[
-  \prod_i\Prob[\Util (\tilde{\theta}_i,z_{-i}) \geq z_i] \geq p 
+The expected payoff from participating still depends on which competitors sit out.
+
+A function $\lambda_i:\Theta_i\rightarrow[0,1]$ defines a strategic plan as a mixture of $s^*_i(\theta_i)\neq\bot_i$ and $\bot_i$ by picking out the probability with which $\bot_i$ is played.
+%
+For any such strategy, write
+%
+\[ 
+  \bar\lambda_i := \Expectation[\lambda_i(\tilde\theta_i)] = \Prob[i\in\Population_\Active].
 \]
 %
-we must have $\sum_iz_i \geq K$.
-%
-This seems to be more difficult in general because we must consider the entire region of feasible offers, rather than simply exhibiting a single element.
+If $\lambda=(\lambda_i)_{i\in\Population}$ is a profile of strategies of this form, we refer to $\bar\lambda = (\bar\lambda_i)_{i\in\Population}\in [0,1]^\Population$ as the \emph{abstention profile}.
 
-
-In order to apply the simplified analysis available for symmetric offers to obtain lower bounds, we would need to know that a symmetric offer always does at least as well as an asymmetric one.
-%
-However, this is not the case:
-
-
-
-
-
-\begin{comment}
-Some examples:
-%
-\begin{itemize}
-  \item Network layer censorship --- eclipse attack, spam.
-  %
-  \item Consensus level Byzantine equivocation, failure to attest. Thresholds here are guaranteed by results in BFT consensus theory and apply to the full consensus value, i.e.~full blocks in Ethereum.
-  %
-  \item System state manipulation (e.g. governance attack, randomness manipulation). This includes what \cite{wahrstatter2024blockchain} calls \emph{application layer} censorship.
-  %
-  \item Blockspace congestion.
-\end{itemize}
-%
-
-\begin{example}[Liveness failures without censorship]
-
-  In some cases, it may be incentive compatible to omit transactions without the intervention of an adversary with preferences over exclusion.
-  %
-  For example, if the fee attached to a transaction is less than the marginal orphan risk increase associated to its inclusion, it should be individually rational to omit it; the costs associated with the previous calculation therefore vanish.
-  %
-  If these types of situations fall within our definition of censorship, then we are forced to accept that the associated `censorship resistance' values are zero (or negative).\footnote{Such cases do fall into scope for some objectives quoted for Ethereum, such as `chain neutrality' \url{https://ethresear.ch/t/uncrowdable-inclusion-lists-the-tension-between-chain-neutrality-preconfirmations-and-proposer-commitments/19372/6}.}
-
-\end{example}
-
-\begin{example}[Censorship by congestion]
-  
-  Suppose a censoring adversary can perform only the actions assumed of the `honest' users of our blockchain system: creating transaction items and offering payment in exchange for their inclusion.
-  %
-  Such an adversary may attempt a \emph{spam attack}, creating junk transactions with sufficiently high fee bids that, during the attack, no fee-maximising block contains the targeted items.
-  %
-  Do we need to take into consideration attacks of this form in computing censorship resistance?
-  
-  I will argue that a blockspace supply mechanism subject to a successful attack of this form is essentially functioning as intended.
-  %
-  The optimal allocation of blockspace to items with sufficient payments is an economically efficient outcome, regardless of the intent behind the creation of those items.
-  %
-  I'll use this argument to justify not attempting to compute the costs of such an attack, \emph{even if it might be cheaper} than other approaches (though the reader may find this rather unlikely, we can construct examples in which it would be).
-  
-\end{example}
-\end{comment}
-
-
-
-
-\subsection{Scheduler decision problem}
-
-Suppose that after bidder $i$ draws his type $\theta_i$, but before other actions are taken, an adversary $\Adversary$ offers $i$ a bribe $z_i$ to abstain from the auction.
-%
-Bidder $i$ has two pure strategies at this stage:
-\begin{enumerate}
-  \item Reject the bribe and play his optimal strategy in the rest of the game.
-  \item Accept the bribe and abstain from play, netting $z_i$.
-\end{enumerate}
-%
-More generally, $i$ may choose an arbitrary mixture $\lambda_i(\theta_i,z_i)\in[0,1]$ of the two strategies.
-
-If all bidders receive bribes in this fashion, then if $i$ chooses to remain in play and bid optimally, his expected surplus depends on how many, and in asymmetric cases which, other bidders accept these bribes and which remain in play.
-%
-This in turn depends on bidder $i$'s beliefs about how much each other player was offered.
-
-For simplicity, we will assume that the bribe amounts $z_j$ are all \emph{common knowledge}.
-%
-We justify this assumption on the following basis:
-%
-\begin{enumerate}
-  \item 
-    The only reason the adversary should have to bribe any one bidder to abstain is to prevent the item from being allocated. 
-    %
-    Therefore, an adversary who attempts to bribe one bidder must attempt to bribe all bidders.
-  
-  \item
-    An adversary is likely to take the same approach to pricing his bribe, i.e.~generously or parsimoniously, for all bidders.
-    %
-    For example, if $z_i$ is high enough to make bidder $i$ consider accepting with high probability, then $z_j$ is likely similarly high for all $j\in N$.
-
-\end{enumerate}
-
-Thus, player $i$'s payoff if he remains in play depends on the expectations
-%
+For each $i\in S\subseteq\Population$, let 
 \[
-  \bar\lambda_j(z_j) := \Expectation[\lambda_j^*(\tilde{\theta}_j,z_j)]
+  \Util_{i,S}(\theta_i) := \Expectation[U_i(s^*(\tilde\theta) \wedge [S])\mid \tilde\theta_i=\theta_i]
 \]
 %
-of the mixed strategy $\lambda^*(\tilde{\theta}_j,z_j)$ played by each opponent $j\in [N]\setminus\{i\}$, based on their unknown cost type $\tilde{\theta}_j$ and the known bribe amount $z_j$.
+where for $s\in\Action$ and $S\subseteq\Population$ we write $s\wedge [S]$ for the `masked' strategy profile defined by 
+%
+\[
+  (s\wedge[S])_j = s_j \text{ for } j\in S \qquad (s\wedge[S])_j = \bot_j \text{ for } j\in\Population\setminus S.
+\]
 
-Thus the condition for optimality is that $i$ accepts the bribe whenever
+Define a function
+%
+\[
+  Z_i(\tilde\theta_i,\lambda_{-i}) := \sum_{i\in S\subseteq \Population} \Util_{i,S}(\tilde\theta_i)\prod_{j\in\Population\setminus S}\lambda_j\prod_{k\in S\setminus\{i\}}(1-\lambda_k).
+\]
+%
+It is a deterministic function of the random variable $\tilde\theta_i$.
+%
+It has the following interpretation: if each scheduler $j\in\Population\setminus\{i\}$ plays a mixed strategy with abstention profile $\lambda_{-i}$, then
+%
 \begin{align*}
-  z_i &> \Expectation[U_i(\theta_i,\tilde{\theta}_{-i})) \mid i\in \Population_\alpha(\lambda_{-i}), v_i] \\
-  &=: c_i(\theta_i,z_{-i}) \\
-  &= \sum_{S\subseteq \Population\setminus\{i\}} c_{i,S}(\theta_i) \prod_{j\in S}\bar\lambda_j(z_j) \prod_{i\neq k\not\in S} (1-\bar\lambda_k(z_k))
+  Z_i(\theta_i,\Expectation[\lambda_{-i}(\tilde\theta_{-i})]) &= \sum_{i\in S\subseteq \Population} \Util_{i,S}(\theta_i)\prod_{j\in\Population\setminus S}\Prob[j\not\in\Population_\Active]\prod_{k\in S\setminus\{i\}}\Prob[k\in\Population_\Active] \\
+  &= \sum_{i\in S\subseteq\Population}  \Util_{i,S}(\theta_i) \Prob[\Population_\Active = S] \qquad \text{by independence}\\
+  &= \Expectation\left[ U_i(s_i,\lambda_{-i}(\tilde\theta_{-i}))\right].
 \end{align*}
 %
-and rejects it whenever the reverse strict inequality is satisfied.
-%
-A non-pure strategy is possible only when this inequality is an equality.
+That is, $Z_i(\tilde\theta_i,\lambda_{-i})$ is scheduler $i$'s expected payoff from participating, given that his competitors play the strategy profile $\lambda_{-i}:\Theta_{-i}\rightarrow [0,1]^{\Population\setminus\{i\}}$.
+
+
+
 
 \begin{proposition}[Characterisation of equilibria]
   \label{thm:bidder-equilibrium}
 
-  A strategy profile $(\lambda_i^*)_{i=1}^N$ is a Nash equilibrium of the abstention game $(\Mechanism,\vec{z})$ if and only if
+  A strategy profile $(\lambda_i)_{i\in\Population}$ is a Nash equilibrium of the abstention game $\Mechanism(z)$ if and only if
   %
   \[
-    \lambda_i^*(\theta_i,\vec{z}) = \left\{\begin{array}{ll} 
-      1 & \text{if } z_i > \Util_i(\theta_i,z_{-i}) = Z_i(\theta_i,\bar\lambda(z_{-i})) \\ 
-      0 & \text{if } z_i < \Util_i(\theta_i,z_{-i}) = Z_i(\theta_i,\bar\lambda(z_{-i}))
+    \lambda_i(\theta_i) = \left\{\begin{array}{ll} 
+      1 & \text{if } z_i > Z_i(\theta_i,\Expectation[\lambda_{-i}(\tilde\theta_{-i})]) \\ 
+      0 & \text{if } z_i < Z_i(\theta_i,\Expectation[\lambda_{-i}(\tilde\theta_{-i})])
     \end{array}\right.
   \]
+  %
+  for each $i\in\Population$.
 
 \end{proposition}
-
-\begin{corollary}[Existence of equilibria from expected play]
-  \label{thm:expected-equilibria-existence}
-
-  A vector $(\lambda_i)_{i=1}^N$ is the vector of expectation values of a Nash equilibrium if and only if the inequalities
-  %
-  \[
-    \Prob[Z_i(\tilde\theta_i,\lambda_{-i}) < z] \leq \lambda_i \leq \Prob[Z_i(\tilde\theta_i,\lambda_{-i}) \leq z]
-  \]
-  %
-  are satisfied.
-
-\end{corollary}
 %
 \begin{proof}
-  
-  Suppose given a set $\lambda_i$ satisfying the desired inequalities.
-  %
-  Let $\Theta_i(z_i)=\{\theta\in\Theta_i \mid Z_i(\theta,\lambda_{-i}) = z_i\}$.
-  %
-  It suffices to construct a function $\lambda^*_i:\Theta_i(z_i)\rightarrow[0,1]$ such that
+
+  The payoff of a mixed strategy $\lambda\in[0,1]$ given competitors playing $\lambda_{-i}$ is precisely
   %
   \[
-    \lambda_i - \Prob[Z_i(\tilde\theta_i,\lambda_{-i}) < z] = \int_{\Theta_i(z_i)} \lambda_i^*(\theta)dF_{\tilde\theta}
+    \lambda z_i + (1-\lambda) Z_i(\theta_i,\Expectation[\lambda_{-i}(\tilde\theta_{-i})])
   \]
   %
-  for each $i$.
-  %
-  Since 
-  %
-  \[
-    0 \leq \lambda_i - \Prob[Z_i(\tilde\theta_i,\lambda_{-i}) < z] \leq \Prob[Z_i(\tilde\theta_i,\lambda_{-i}) \leq z] - \Prob[Z_i(\tilde\theta_i,\lambda_{-i}) < z] ]= \Prob[\tilde\theta_i\in \Theta_i(z_i)]
-  \]
-  %
-  this is clearly possible.
-  %
-  \qedhere
+  which is maximised at $1$ if $z_i>Z_i$, $0$ if $z_i<Z_i$, and is indifferent to $\lambda\in[0,1]$ when $z_i=Z_i$. \qedhere
 
 \end{proof}
+
+Using this result, we can construct a tight correspondence between Nash equilibria of this form and the abstention profile $\bar\lambda\in [0,1]^\Population$.
+%
+Indeed, the only ambiguity left by Proposition \ref{thm:bidder-equilibrium} is the strategy for types belonging to the \emph{indifference region}
+%
+\[  
+  \Theta_i(z_i):=\{\theta\in\Theta_i \mid Z_i(\theta,\lambda_{-i}) = z_i\}
+\]
+%
+of $z_i$.
+
 
 \begin{corollary}[Uniqueness of equilibria from expected play]
   \label{thm:expected-equilibrium-uniqueness}
 
-  A Nash equilibrium strategy profile is uniquely determined away from $\Util_{i,\vec{z}}^{-1}(z_i)$ by its vector of expectation values $\bar\lambda_i(\vec{z})=\Expectation[\lambda_i^*(\tilde\theta_i,\vec{z})]$.
+  A Nash equilibrium strategy profile is uniquely determined away from $\Theta_i(z_i)$ by its abstention profile.
   %
-  If $\Util_i(-,\vec{z})$ is strictly monotone increasing, then it is uniquely determined everywhere.
+  If $Z_i(-,z)$ is strictly monotone increasing in its first argument, then it is uniquely determined everywhere.
 
 \end{corollary}
 %
@@ -583,17 +571,69 @@ A non-pure strategy is possible only when this inequality is an equality.
 
 By abuse of language, we will call a vector of probabilities $(\lambda_i)_{i=1}^N$ an \emph{equilibrium} if the inequalities of Corollary \ref{thm:expected-equilibria-existence} are satisfied.
 
-\begin{corollary}[Reverse engineering equilibria]
+\begin{corollary}[Existence of equilibria from expected play]
+  \label{thm:expected-equilibria-existence}
 
-  Let $\lambda_i\in[0,1], i=1,\ldots,N$ be any vector of probabilities, and write
+  A vector $\lambda\in[0,1]^\Population$ is the abstention profile of a Nash equilibrium if and only if the inequalities
   %
   \[
-    z_i = Q_{Z_i(\tilde\theta_i,\lambda_{-i})}(\lambda_i) \quad i=1,\ldots,N.
+    \Prob[Z_i(\tilde\theta_i,\lambda_{-i}) < z] \leq \lambda_i \leq \Prob[Z_i(\tilde\theta_i,\lambda_{-i}) \leq z]
   \]
   %
-  Then $(\lambda_i)_{i=1}^N$ is a Nash equilibrium of $(\Mechanism,\vec{z})$.
+  are satisfied.
+
+\end{corollary}
+%
+\begin{proof}
+  
+  Suppose given $\lambda$ satisfying the desired inequalities.
   %
-  Moreover, $z$ is the lowest offer that can achieve a strategy profile at least as good as $\lambda$: if $\vec{z}'$ is any offer that admits an equilibrium $\lambda_i'$ with $\lambda_i'\geq\lambda_i$ for all $i$, then $z_i'\geq z_i$ for all $i$.
+  Proposition \ref{thm:bidder-equilibrium} gives us a candidate for $\lambda^*_i:\Theta_i\rightarrow[0,1]$ away from
+  %
+  \[  
+    \Theta_i(z_i):=\{\theta\in\Theta_i \mid Z_i(\theta,\lambda_{-i}) = z_i\}.
+  \]
+  %
+  It remains to construct a function $\lambda^*_i:\Theta_i(z_i)\rightarrow[0,1]$ such that
+  %
+  \begin{align*}
+    \lambda_i &= \int_{\Theta}\lambda_i^*(\theta_i) dF_{\tilde\theta_i} \\
+    &= \int_{\Theta_i(z_i)} \lambda_i^*(\theta)dF_{\tilde\theta} + \Prob[Z_i(\tilde\theta_i,\lambda_{-i}) < z],
+  \end{align*}
+  %
+  that is, such that
+  %
+  \[
+    \lambda_i - \Prob[Z_i(\tilde\theta_i,\lambda_{-i}) < z] = \int_{\Theta_i(z_i)} \lambda_i^*(\theta)dF_{\tilde\theta}
+  \]
+  %
+  for each $i$.
+  
+  Since 
+  %
+  \[
+    0 \leq \lambda_i - \Prob[Z_i(\tilde\theta_i,\lambda_{-i}) < z] \leq \Prob[Z_i(\tilde\theta_i,\lambda_{-i}) \leq z] - \Prob[Z_i(\tilde\theta_i,\lambda_{-i}) < z] ]= \Prob[\tilde\theta_i\in \Theta_i(z_i)]
+  \]
+  %
+  this is clearly possible; for example, we could take $\lambda_i|_{\Theta_i(z_i)}$ to be the indicator function of any sub-event of $\Theta_i(z_i)$ having measure $\lambda_i - \Prob[Z_i(\tilde\theta_i,\lambda_{-i}) < z]$.
+  %
+  \qedhere
+
+\end{proof}
+
+
+\begin{corollary}[Reverse engineering equilibria]
+  \label{thm:equilibrium-from-quantile}
+
+  Let $\lambda\in[0,1]^\Population$ and write
+  %
+  \[
+    z_i = Q_{Z_i(\tilde\theta_i,\lambda_{-i})}(\lambda_i) \quad i\in\Population.
+  \]
+  %
+  Then there exists a Nash equilibrium of $\Mechanism(z)$ with abstention vector dominating $\lambda$.
+  %
+  Moreover, $z$ is the lowest offer that can achieve an abstention profile that dominates $\lambda$: if $z'\in\uR^\Population$ is any offer that admits an equilibrium $\lambda'$ with $\lambda_i'\geq\lambda_i$ for all $i$, then $z_i'\geq z_i$ for all $i$.
 
 \end{corollary}
 %
@@ -622,11 +662,74 @@ By abuse of language, we will call a vector of probabilities $(\lambda_i)_{i=1}^
 
 
 
-We will distinguish two basic classes of examples:
-\begin{enumerate}
-  \item Common value, i.e.~the $v_i$ are deterministic and known to all participants;
-  \item Strictly monotone, i.e.~the function $c_i(v)$ is strictly increasing in $v$ and the distribution of $\tilde{v}$ is without atoms.
-\end{enumerate}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\section{Discussion}
+
+We now discuss some alternative perspectives and extensions of the theory presented in \S\ref{section:model}.
+
+\subsection{Censorship resistance}
+\label{section:cr}
+
+We have discussed the cost of censorship at a chance bound $p$, but not `censorship resistance' of a mechanism.
+%
+To make sense of censorship resistance as a function of the mechanism alone, we must eliminate the dependence on $p$.
+
+Suppose a censoring adversary stands to gain a payoff of $v_\Adversary>0$ for successfully censoring items.
+%
+Then if $\Adversary$ chooses offers $z\in\uR^\Population$ so as to achieve censorship with probability $p$, he derives a utility of
+%
+\[
+  U_\Adversary(z;\bar{\lambda}) = pv_\Adversary - \sum z \leq pv_\Adversary - \CC{p}(\Mechanism).
+\]
+%
+If $\CC{p}(\Mechanism)/p > v_\Adversary$, then $\Adversary$ would rather do nothing, i.e.~offer $z=0$.
+
+(We could have a situation where any offer that achieves censorship at threshold $p$ also achieves censorship with probability $p'>p$; in this case $\CC{p'}=\CC{p}$.)
+
+This leads us to make the following definition:
+%
+\begin{definition}[Censorship resistance]
+
+  A mechanism $\Mechanism$ is $K$-\emph{censorship resistant} if $\CC{p}(\Mechanism)/p>K$ for all $p\in(0,1]$.
+
+\end{definition}
+%
+That is, $\Mechanism$ is $K$-censorship resistant if no rational, risk-neutral adversary with type $v_\Adversary\leq K$ would attempt censorship at any chance bound.
+%
+Unfortunately, we currently don't have many tools at our disposal to find lower bounds on $\CC{p}$ for all $p>0$.
+
+\begin{example}
+
+  Let $\Mechanism$ be the second price auction with $F_{\tilde\theta}$ concave for $\theta\geq Q_{\tilde\theta}(p_0)$.
+  %
+  Then $\CC{p} \geq N(\tau + Q_{-\tilde\theta}(p^{1/N})p^{\frac{N-1}{N}})$, and so
+  %
+  \[
+    \CC{p}/p \geq N(\tau/p + Q_{-\tilde\theta}(p^{1/N})/p^{1/N})
+  \]
+  %
+  for $p\geq p_0$.
+  %
+  If $Q_{-\tilde\theta}$ drops off sharply as $p$ goes below $1$, then this function may be minimised at $p<1$.
+
+\end{example}
+
+\begin{comment}
+
 
 \paragraph{Common value case}
 Here $\bar\lambda(z)=\lambda^*(z)$ and we can solve for $z$.
@@ -655,96 +758,107 @@ The special case $\tilde\theta \equiv 0$ is studied in \cite{FPR}.
 
 \end{example}
 
-\begin{comment}
 
-\begin{question}What happens when obtain large $N$ by adding a long tail of bidders with low $\tilde{v}$?\end{question}
+\begin{example}[Second price common value]
 
-\begin{example}[Bidder reputation]
-
-  A general rule of thumb is that the more information the adversary has, the cheaper it becomes to bribe.
+  We return to the case of the second price auction with common value $v$.
   %
-  For example, consider the case that bidders are partitioned into two sets: a `high reputation' set $[N]$ of bidders that handle most uncensored requests, and a long tail 'low reputation' set $[M]$ that comes into play when the high reputation set has been bought off.
+  Recall that $\lambda^*(z)=(z/v)^{1/(N-1)}$ on $[0,v]$.
   %
-  The high reputation set may be quite small; for example, $N=2$ in PBS today (over 90\% of blocks are handled by just two entities).
+  Then 
+  \begin{align*}
+    U_\Adversary(z) &= v_\Adversary (z/v)^{\frac{N}{N-1}} - Nz(z/v)^{\frac{1}{N-1}} \\
+    &= z^{\frac{N}{N-1}}v^{-\frac{1}{N-1}}\cdot \left(v_\Adversary/v - N  \right)
+  \end{align*}
+  for $z\in[0,v]$.
+  %
+  This utility function is concave (resp.~convex) if and only if it is negative (resp.~positive) for $z>0$.
+  %
+  The auction is censorship resistant if and only if $v_\Adversary < Nv$ (concave).
 
-  Suppose that types and strategies are symmetric within each of the two sets, and that $v_N>v_M$ almost surely. 
-  %
-  We are allowed two bribe amounts $z_N$ and $z_M$ and strategic plans $\lambda_N^*(\tilde{v},z_N)$ and $\lambda_M^*(\tilde{v},z_M)$.
-  %
-  Censorship succeeds with probability $p=\bar\lambda_N(z_N)^N\bar\lambda_M(z_M)^M$.
-
+  In the case of a procurement auction with max fee $\pi$ and common marginal cost $\mu$ \cite[\S3.2]{roughgarden2024transaction}, the bound becomes $N(\pi-\mu)$.
 
 \end{example}
-
 \end{comment}
 
 
+\subsection{Censorship by replacement}
+\label{section:replacement}
 
+The approach of censorship by contracts for exclusion is `out of band' in the sense that is makes use of a type of agreement not provided by the typical core blockchain API, whose main purpose is to arrange for transaction \emph{inclusion}.
+%
+There are also approaches to censorship that use only inclusion interfaces, which we refer to collectively as \emph{censorship by replacement}.
 
+The simplest replacement strategy is to spam transactions offering higher fees than the target until all available blockspace is filled up.
+%
+In terms of incentives, the spam presents schedulers with a strategy --- to wit, include all of the spam --- that is mutually exclusive with including the targeted flow.
+%
+However, this approach cannot exclude targeted flow without also excluding \emph{all} transactions with maximum fee at most as much as the target; this approach is therefore necessarily more expensive than out of band contracts for exclusion.
 
+Another example of a censorship strategy which excludes a possibly unnecessarily large class of transactions is so-called `application layer censorship \cite[Def.~4]{wahrstatter2024blockchain}, which attempts to block the state transition that would be induced by a transaction (i.e.~force it to revert).
+%
+In order for application layer censorship to function at the level of transaction inclusion, the targeted transactions must be attached to \emph{revert protection} guarantees that promise they will not be included into a block if they would revert \cite{zhu2024quantifying}.
+%
+As with the spam strategy, application layer censorship is generally more costly than a contract for exclusion because it excludes all (protected) transactions that would revert under the manipulated state, and not necessarily only the targeted items.
 
-\end{document}
+\subsection{Censorship and efficiency}
 
+Censorship by contracts for exclusion are also distinguished from other approaches to censorship by the fact that it results in an economically inefficient allocation of blockspace --- namely, one in which free blockspace fails to be allocated even though there are available transaction items that offer a fee in excess of the processing costs of some scheduler that could handle it.
+%
+By way of contrast, an outcome in which blocks are filled with spam that pays higher transaction fees than targeted transaction material, or one that includes higher paying transactions that manipulate state so as to force reversion of targeted transactions, is efficient.
+%
+From the perspective of the blockspace supply mechanism, such outcomes are a case of the system functioning as intended.
 
+Meanwhile, attacks that focus on manipulating some other layer (such as the network) proceed by modifying the \emph{environment}, for example by limiting the set of transactions visible to each scheduler.
+%
+They have no bearing on the efficiency of the method by which transactions are selected from that environment for inclusion.
 
+The efficiency argument also provides some microeconomic intuition as to why we might expect introducing competition at the scheduler level might make this particular approach to censorship more costly: in an idealised perfectly competitive scheduler market, there are always suppliers that stand ready to take the place of any censoring scheduler and handle targeted items.
+%
+In such a perfectly competitive market, censorship by contracts for exclusion cannot occur.
 
+On the other hand, the cost of censorship by replacement strategies remains unchanged in the presence of scheduler competition.
 
+\subsection{Censorship as an anticommons good}
 
+Censorship by contracts for exclusion are often expensive when there are many active schedulers because the adversary faces a tragedy of the anticommons \cite{heller1998tragedy}: if each scheduler may unilaterally decide to accept the item, then in order to get the desired effect, the adversary must make arrangements with \emph{all} schedulers, effectively giving \emph{each} scheduler monopoly power in the deal.
 
+The formulas we obtained in \S\ref{section:model} for equilibrium scheduler strategies assumed that schedulers do not exercise their market power against the adversary (though of course they may against the fee payer).
+%
+That is, the scheduler accepts an offer whenever it exceeds his opportunity cost, instead of trying to hold out for as much as the censor can afford.
+%
+Given the reasoning in \S\ref{section:cr} which characterises censorship resistance in terms of the \emph{lowest} returns to censoring under which a censorship strategy is viable, this simplification is quite reasonable.
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-\newpage
-\section{Discussion}
-
-
-Situations:
-\begin{itemize}
-
-  \item 
-    The bribe vector $\vec{z}$ is known to all. The adversary must contract with each scheduler in isolation; commitments are binding even if only a subset of offers are accepted.
-
-  \item
-    The adversary may attempt to secure a single agreement involving all or a subset of schedulers.
-    %
-    The agreement is not binding unless all counterparties agree.
-  
-  \item
-    The adversary attempts to secure an agreement as above, but governing multiple auctions for different items over time where different schedulers may be active in different epochs.
-
-\end{itemize}
 
 \subsection{Conditional contracting}
 
-Here I'll make a brief comment on how costs could come down under certain forms of conditional contracts for exclusion:
+Even among contracts for exclusion, the form of contract we have considered in our model is quite restricted: they make an ex-ante commitment to payment that is not conditioned on any factors other than exclusion.
+%
+By committing to pay only when certain additional conditions are satisfied, the adversary can modulate their cost of entering into the contracts.
 
+We identify two major types of conditions that may warrant further research:
+%
 \begin{itemize}
-  \item \emph{ex-ante}. 
-    Condition the terms of a group contract on everyone else joining the coalition. This effectively makes the construction of a coalition atomic.
-    
-    In terms of cost to censor, only the expected payoffs from the maximally competitive mechanism need be compensated.
+  \item \emph{atomic coalition}. 
+    Condition the terms of a contract for exclusion on all schedulers joining the coalition. 
     %
-    In such cases, censorship resistance can actually \emph{fall} as $N$ increases (if $1/\Util_N$ grows faster than $N$).
+    This effectively makes the construction of a coalition \emph{atomic}.
+    %
+    Such a contract need only compensate each scheduler for the expected payoffs $\Expectation[\Util_{i,\Population}(\tilde\theta_i)]$ from the fully competitive mechanism.
+    
+    In such cases, the cost of censorship can actually \emph{fall} as $N$ increases (if $1/\Util_\Population$ grows faster than $N$).
+    %
+    An adversary who finds a way to coordinate such a contract may therefore have a strong incentive to do so.
 
 
   \item \emph{ex-post}.
-    In the case of PBS: condition the payment on the builder winning the PBS auction. This could be effected by depositing funds in a smart contract and making them available to any entity who can prove that they built the target block and that the target block did not contain the targeted items.
+    Condition the payment on the scheduler winning the auction.
     %
-    This allows the censor to pay only one builder, though in this case the full revenue delta must be compensated instead of just the (expected) profit on $T$.
+    In this case, only the winning scheduler(s) must be paid, and the compensation must exceed their ex-ante expected profits \emph{conditioned on winning}.
+
+    For example, in the case of a PBS auction \cite{thegostep2021mevboost} such a contract could be implemented by depositing funds in a smart contract and making them available to any entity who can prove that they built the target block and that the target block did not contain the targeted items.
+    %
+    In this case, the offer must be at least as great as the revenue each builder expects to get from $T$ if he wins, since he can then afford to bid away such revenue to the proposer in order to ensure the win.
 
 \end{itemize}
 
@@ -754,41 +868,33 @@ Here I'll make a brief comment on how costs could come down under certain forms 
 
 
 \subsection{Information asymmetry}
-
-Some example scenarios I want to write about:
-\begin{enumerate}
-  \item
-    Suppose, as in \cite{FPR}, that receipt of a bribe offer is taken as evidence that a censorship attempt is ongoing, with the assumption that the amount offered to other parties is similar.
-    %
-    Then a high bribe offer suggests a censorship that is likely to succeed, which also means that if the target agent rejects the bribery offer he is likely to face reduced competition and hence higher profits from the auction.
-    %
-    For this reason, symmetric bribes generally need to beat the expected \emph{monopoly} profit from the auction to have a high probability of success.
-
-    However, a low but non-negligible probability of success can sometimes be achieved with a \emph{low} bribe.
-    %
-    Indeed, a bidder that ignores a low bribe is still likely to face some competition in the scheduler auction, so the bribe only needs to beat the \emph{competitive} profits (and monopoly profits with low probability).
-    %
-    We formalise this line of thinking in Example \ref{ex:non-negligible}.
-
-  \item
-    On the other hand, if a bribe is \emph{not} taken indicative of a censorship attempt that affects other bidders too, then more bidders can, apparently paradoxically, entail lower total bribery cost.
-    %
-    This is because the bribe only needs to beat competitive profits for each of $N$ bidders, which may be less than $1/N$ times the monopoly profits.
-
-    However, I found it difficult to come up with any reasons that this model would be realistic.
-    %
-    One option is to have a long-lived adversary regularly issue `false flag' censorship bribes to individual bidders.
-    %
-    If bidders cannot see bribe offers extended to their competitors, then they cannot tell whether a real censorship attempt is underway.
+\label{section:asymmetry}
 
 
-\end{enumerate}
+Perhaps the least convincing assumption in our model is that the offer $z$ is common knowledge at the time schedulers choose their strategies.
+%
+Let us attempt to defend it.
 
+From the perspective of a scheduler, the fact of having received an offer of a contract for exclusion is in itself informative.
+%
+It strongly suggests that an attempt to censor the targeted flow is ongoing, and hence that the adversary must likely have offered such contracts to all schedulers.
+%
+Indeed, other than as an attempt at misdirection, I can't think of any other reason to make such offers.
+%
+Thus even if we do not assume that $i\in\Population$ has knowledge of $z_{-i}$, he can certainly make the inference that $z_i>0 \Rightarrow z_{-i}>0$.
+
+The scheduler might even wish to infer that the censor takes a similar approach to pricing his bribe for all schedulers.
+%
+For example, if $z_i$ is high enough to make bidder $i$ consider accepting with high probability, then $z_j$ is likely similarly high for all $j\in N$.
+%
+Implicit in this inference is an assumption that the censor will adopt an approximately \emph{symmetric} strategy, that is, one that targets the same acceptance probability $p^{1/N}$ from all schedulers.
+%
+However, this assumption cannot generally be justified: even under the common knowledge model, a symmetric offer may not be the adversary's best strategy.
 
 \begin{example}[Asymmetric offer]
   \label{asymmetric-offer}
 
-  It is straightforward to describe a scenario in which an asymmetric offer achieves a lower cost of censorship at some quantile $p<1$ than a symmetric one.
+  We describe here a scenario in which an asymmetric offer achieves a lower cost of censorship at some quantile $p<1$ than a symmetric one.
   %
   Suppose $\Mechanism$ is a second price auction with reserve $\tau$ between two schedulers $a$ and $b$.
   %
@@ -830,78 +936,102 @@ Some example scenarios I want to write about:
 
 \end{example}
 
+If the scheduler does not take his offer $z_i$ as evidence of high offers made to his competitors, then he faces a similar decision scenario to the case of a contract conditioned on the participation of all schedulers.
+%
+In either case, the alternative to the offer is facing a fully competitive scheduling mechanism, and so the required offer amount may actually end up decreasing as $N$ grows.
+%
+This information model may be realistic for a risk-averse scheduler $i$, and indeed it is intuitively reasonable that such $i$ may prefer the certainty of the CFE to the uncertainty of the order flow competition.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
 
-\subsection{Long-running coalition}
+\subsection{Sanctions}
+\label{section:sanctions}
 %
-A similar formula comes up in the following more believable scenario: a proportion $\lambda\in[0,1]$ of the full scheduler population enters into a long-running coalition to censor items from a class $T$.
+Probably the most widely discussed example of a censorship threat for the Ethereum chain was that presented by the addition of the Tornado Cash contracts to the OFAC sanctions list \cite{wright2022defi}.
 %
-Assume that items are scheduled by a sequence of repeated auctions, one per epoch, in which $N$ members of the population are randomly sampled to participate.
+A regulatory threat such as this can be modelled along the lines of \S\ref{section:model} by positing that a scheduler incurs a certain `risk cost' for breaching the regulation.
 %
-Then the per epoch opportunity cost to a $\theta_i$-typed member of the coalition, and therefore the amount that must be compensated by the leader of the coalition, is
-\[
-  \lambda_i\sum_{k=1}^{N}\lambda^{N-k}(1-\lambda)^{k-1} \Expectation_i[c_k(\tilde\theta_{i,t})],
-\]
-%
-where $\lambda_i$ is the member's election weight.
-%
-Censorship succeeds in a proportion $\lambda^N$ of epochs.
-%
-We have the structural equation
-\[
-  \CC{\lambda^N}(\Mechanism) = \RSGF_N(\lambda)
-\]
-
-Another, perhaps more immediately relevant, way that offers can arise is in the form of threats, for example from regulators (OFAC) or legal contracts.
-%
-A legally binding commitment or exposure of this type encumbers the affected agent with a \emph{risk cost} $z$ for breaching (for example, an added insurance premium or legal representation cost).
-%
-Such exposures have the following characteristics:
+Such exposures have the following additional characteristics:
 \begin{itemize}
-  \item They asymmetrically affect agents in different jurisdictions; there is no reason to expect all bidders to be affected by one regulatory system.
-  \item They are long-lived.
-  \item They tend to be public. (In the case of some legal contracts such as non-compete agreements, they may not be public, but this example is rather speculative.)
+  \item They asymmetrically affect agents in different jurisdictions;
+  \item Schedulers cannot easily choose whether or not to join the arrangement;
+  \item They are long-lived, that is they extend over the period of many blocks;
+  \item They tend to be publicly known.
 \end{itemize}
-
-
-For the next result, we shift focus from a single transaction item to a long-running arrangement where a class of transactions are to be dropped in every slot in which the participating schedulers are active.
 %
-We assume that negotiation is possible and that the set of schedulers who join the coalition is fixed throughout its duration.
+The long life of such an arrangement means that acceptance probabilities can be understood in a frequentist interpretation as the abstention \emph{rate} of exposed schedulers.
 
-\begin{theorem}[Cost to form a long-running censoring coalition]
+For a simplistic model, suppose given a scheduler population $\Population$ each member of which has a `weight' $\lambda_i\in[0,1]$, such that $\sum_{i\in\Population}\lambda_i=1$ (for example, this could be the stake weight of a consensus node in POS Ethereum).
+%
+Each epoch, $K$ schedulers are drawn from $\Population$ according to the probability distribution $\vec{\lambda}$ and may participate in a block construction mechanism.
+%
+To avoid consideration of complicated hypergeometric distributions, we assume the draws are made with replacement, so each scheduler can be selected multiple times.
 
-  The cost to form the coalition $\CC{p}(\Mechanism)$ is a degree $N$ polynomial in $q=p^{1/N}$ with positive real coefficients satisfying the differential relation
-  \[
-    0= \frac{\partial}{\partial q}\CC{q^N}(\Mechanism) + \sum_{k=1}^N {N-1 \choose k-1} F_{\tilde\theta}(q)^{k-1} q^{N-k}(1-q)^k.
-  \]
+Now, introduce a censoring adversary who enters into an arrangement --- in the present context, in the form of a regulatory imposition --- with a fraction $\Population_\lambda$ of the population having total weight $\lambda$.
+%
+Each epoch, if a scheduler $i\in\Population_\lambda$ with type $\tilde\theta_i$ is drawn he faces a competition against up to $K-1$ schedulers of whom an expected fraction $\lambda^{K-1}$ also belongs to the coalition.
 
-\end{theorem}
+Suppose that each scheduler $i$ learns the number $K_i$ of times he has been drawn in a given epoch, and must decide whether or not to abstain before learning whether the other schedulers drawn in that epoch belong to the coalition.
+%
+In the special case that $i$ knows that his competitors in $\Population_\lambda$ intend to comply with the regulation, he faces the decision inequality
+%
+\[
+  z_i \underset{?}{>} \sum_{k=K_i}^K {K-K_i \choose k-K_i} \left( \frac{\lambda-\lambda_i}{1-\lambda_i} \right)^{K-k} \left(1-\left( \frac{\lambda-\lambda_i}{1-\lambda_i} \right)\right)^{k-K_i} \Util_{i,k-K_i}(\theta_i)
+\]
+%
+where $\Util_{i,k}(\theta_i)$ is the value function of $i$ conditioned on an active set consisting of $k-K_i$ draws with replacement from $\Population\setminus\Population_\lambda$ and $z_i$ is $i$'s estimated risk cost of non-compliance.
+
+The observant reader will note that expression on the right is (a variant of) $Z_i\left(\theta_i, \frac{\lambda-\lambda_i}{1-\lambda_i} \right)$, so that once again we have obtained an expression for the cost of censorship in terms of polynomials whose coefficients are conditional value functions of the underlying mechanism.
 
 
-\begin{example}[Second price common value]
 
-  We return to the case of the second price auction with common value $v$.
-  %
-  Recall that $\lambda^*(z)=(z/v)^{1/(N-1)}$ on $[0,v]$.
-  %
-  Then 
-  \begin{align*}
-    U_\Adversary(z) &= v_\Adversary (z/v)^{\frac{N}{N-1}} - Nz(z/v)^{\frac{1}{N-1}} \\
-    &= z^{\frac{N}{N-1}}v^{-\frac{1}{N-1}}\cdot \left(v_\Adversary/v - N  \right)
-  \end{align*}
-  for $z\in[0,v]$.
-  %
-  This utility function is concave (resp.~convex) if and only if it is negative (resp.~positive) for $z>0$.
-  %
-  The auction is censorship resistant if and only if $v_\Adversary < Nv$ (concave).
+\begin{comment}
 
-  In the case of a procurement auction with max fee $\pi$ and common marginal cost $\mu$ \cite[\S3.2]{roughgarden2024transaction}, the bound becomes $N(\pi-\mu)$.
+  \subsection{Negotiation}
+\begin{remark}[Negotiation]
 
-\end{example}
+  For simplicity, in this paper we mostly assume that the type distributions of schedulers are common knowledge, and that moreover before contracting there is no negotiation phase through which the adversary could elicit additional private information about the type of his counterparty: he must simply make a take-it-or-leave-it offer based on the common prior.
+
+\end{remark}
+
+\end{comment}
+
+
+
+
+
+
+
+
+\printbibliography
+\end{document}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 \begin{comment}
 \newpage

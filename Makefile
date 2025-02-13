@@ -1,7 +1,7 @@
 TARGET ?= ./target
 NAME = tldr-cr
 ENV_NAME = tldr-build
-INVOKER ?= podman run --rm --network none -v $$(pwd):/tex:Z -w /tex $(ENV_NAME)
+INVOKER ?= podman run --rm --network none -v $$(pwd):/tex:Z -w /tex oci-archive:$(ENV_NAME).tar
 
 all: $(TARGET)/$(NAME).pdf
 
@@ -29,5 +29,13 @@ $(TARGET)/$(NAME).bcf: $(NAME).tex | $(TARGET)
 clean: | $(TARGET)
 	rm $(TARGET)/*
 
-env: Containerfile
-	podman build . -t $(ENV_NAME)
+env: $(ENV_NAME).tar
+
+$(ENV_NAME).tar: Containerfile
+	-podman build . -t oci-archive:$@
+
+rm-env:
+	rm $(ENV_NAME).tar
+
+#env: Containerfile
+#	podman build . -t $(ENV_NAME)
